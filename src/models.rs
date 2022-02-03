@@ -7,13 +7,45 @@ pub struct Room {
     pub spotify_id: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct GenericOutput<T> {
-    pub error: Option<String>,
+#[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq)]
+pub struct GenericOutput<T: Serialize> {
+    pub data: Option<T>,
     pub success: bool,
     pub status_code: u16,
-    pub data: Option<T>,
+    pub error: Option<String>,
 }
 
 pub const SERDE_ERROR: &str =
-    "{\"data\":null,\"success\":false,\"status_code\":500,\"error\":\"JSON: Error converting to string\"}";
+    r#"{"data":null,"success":false,"status_code":500,"error":"JSON: Error converting to string"}"#;
+
+#[test]
+fn serde_error_deserialize() {
+    let serde = serde_json::from_str::<GenericOutput<u8>>(&SERDE_ERROR);
+    if let Ok(result) = serde {
+        let expected: GenericOutput<u8> = GenericOutput {
+            data: None,
+            status_code: 500,
+            success: false,
+            error: Some(String::from("JSON: Error converting to string")),
+        };
+
+        assert!(result == expected);
+    } else if let Err(result) = serde {
+        panic!("\n{}\n", result);
+    }
+}
+
+#[test]
+fn generic_output_serialize() {
+    let obj = GenericOutput {
+        data: Some("Very good test"),
+        success: true,
+        error: None,
+        status_code: 200,
+    };
+
+    let input = serde_json::to_string(&obj).unwrap();
+    let expected = r#"{"data":"Very good test","success":true,"status_code":200,"error":null}"#;
+
+    assert_eq!(input, expected);
+}
