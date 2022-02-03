@@ -1,6 +1,7 @@
 mod models;
 mod routes;
 mod schema;
+mod service;
 mod websocket;
 
 #[macro_use]
@@ -36,10 +37,9 @@ async fn main() -> std::io::Result<()> {
             // enable logger
             .data(pool.clone())
             .wrap(middleware::Logger::default())
-            .service(crate::routes::hello)
             .service(crate::routes::echo)
             .service(crate::routes::rooms)
-            .route("/hey", web::get().to(crate::routes::manual_hello))
+            .route("/hey", web::get().to(crate::routes::hello))
             // websocket route
             .service(web::resource("/ws/").route(web::get().to(crate::websocket::ws_index)))
         // static files
