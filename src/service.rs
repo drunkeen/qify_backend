@@ -1,35 +1,44 @@
-use std::env;
-
 use actix_web::web::Data;
-use actix_web::{get, post, HttpResponse, Responder};
-use awc::http::StatusCode;
+use actix_web::{HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::{PgConnection, RunQueryDsl};
 use r2d2::Pool;
+use serde::Serialize;
 
-use crate::models::Room;
+use crate::models;
 use crate::schema;
+
+fn respond<T: Serialize>(data: T) -> impl Responder {
+    if let Ok(result) = serde_json::to_string(&data) {
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .body(format!("{:?}", result))
+    } else {
+        HttpResponse::InternalServerError()
+            .content_type("application/json")
+            .body(format!("{:?}", models::SERDE_ERROR))
+    }
+}
 
 pub fn get_all_rooms(pool: &Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     let connection = pool.get().expect("Could not create connection");
-    let res = schema::room::table.load::<Room>(&connection);
+    let res = schema::room::table.load::<models::Room>(&connection);
 
-    if let Ok(result) = res {
-        if let Ok(result) = serde_json::to_string(&result) {
-            HttpResponse::Ok()
-                .content_type("application/json")
-                .status(StatusCode::OK)
-                .body(format!("{:?}", result))
-        } else {
-            HttpResponse::Ok()
-                .content_type("application/json")
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(format!("{:?}", "[]"))
+    let result = if let Ok(result) = res {
+        models::GenericOutput {
+            data: Some(result),
+            status_code: 200,
+            success: true,
+            error: None,
         }
     } else {
-        HttpResponse::Ok()
-            .content_type("application/json")
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body("[]")
-    }
+        models::GenericOutput {
+            data: None,
+            status_code: 500,
+            success: false,
+            error: Some(String::from("ROOMS: Could not connect to database")),
+        }
+    };
+
+    respond(result)
 }
