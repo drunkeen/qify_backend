@@ -109,41 +109,48 @@ impl MyWebSocket {
 }
 
 #[get("/hello")]
-async fn hello() -> impl Responder {
+async fn hello(_pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-#[get("/search")]
-async fn search(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+#[cfg(debug_assertions)]
+#[get("/rooms")]
+async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     let connection = pool.get().expect("Could not create connection");
     let res = schema::room::table.load::<Room>(&connection);
 
     if let Ok(result) = res {
         let tmp = serde_json::to_string(&result).unwrap_or(String::from("Empty vec"));
-
-        // let to_string = to_string.unwrap_or(String::from("Empty vector"));
         HttpResponse::Ok().content_type("application/json").status(StatusCode::OK).body(format!("{:?}", tmp))
     } else {
         HttpResponse::Ok().content_type("application/json").status(StatusCode::INTERNAL_SERVER_ERROR).body("[]")
     }
 }
 
+#[cfg(not(debug_assertions))]
+#[get("/rooms")]
+async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+    HttpResponse::Ok().content_type("text/plain").status(StatusCode::NOT_FOUND).body("Not available in release mode")
+}
+
 #[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
+async fn echo(_pool: Data<Pool<ConnectionManager<PgConnection>>>, req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
 }
 
-async fn manual_hello() -> impl Responder {
+async fn manual_hello(_pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
 
-// pub fn establish_connection() -> PgConnection {
-//     dotenv().ok();
-//
-//     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-//     PgConnection::establish(&database_url)
-//         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-// }
+fn create_pool() -> Pool<ConnectionManager<PgConnection>> {
+    // let connection = establish_connection();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
+
+    r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.")
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -151,13 +158,7 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
     dotenv().ok();
 
-    // let connection = establish_connection();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
-    let pool = r2d2::Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool.");
-
+    let pool = create_pool();
     HttpServer::new(move || {
         App::new()
             // enable logger
@@ -165,7 +166,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(hello)
             .service(echo)
-            .service(search)
+            .service(rooms)
             .route("/hey", web::get().to(manual_hello))
             // websocket route
             .service(web::resource("/ws/").route(web::get().to(ws_index)))
