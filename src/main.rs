@@ -1,18 +1,16 @@
 mod models;
+mod routes;
 mod schema;
 mod websocket;
-mod routes;
 
 #[macro_use]
 extern crate diesel;
 
 use std::env;
 
-use actix_web::{
-    App, HttpServer, middleware, web,
-};
-use diesel::PgConnection;
+use actix_web::{middleware, web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
+use diesel::PgConnection;
 use dotenv::dotenv;
 use r2d2::Pool;
 
@@ -47,8 +45,8 @@ async fn main() -> std::io::Result<()> {
         // static files
         // .service(fs::Files::new("/", "static/").index_file("index.html"))
     })
-        // start http server on 127.0.0.1:8080
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
+    // start http server on 127.0.0.1:8080
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }

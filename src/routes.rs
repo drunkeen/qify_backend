@@ -1,10 +1,10 @@
-use actix_web::{
-    get, HttpResponse, post, Responder,
-};
+use std::env;
+
 use actix_web::web::Data;
+use actix_web::{get, post, HttpResponse, Responder};
 use awc::http::StatusCode;
-use diesel::{PgConnection, RunQueryDsl};
 use diesel::r2d2::ConnectionManager;
+use diesel::{PgConnection, RunQueryDsl};
 use r2d2::Pool;
 
 use crate::models::Room;
@@ -23,20 +23,32 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
 
     if let Ok(result) = res {
         let tmp = serde_json::to_string(&result).unwrap_or(String::from("Empty vec"));
-        HttpResponse::Ok().content_type("application/json").status(StatusCode::OK).body(format!("{:?}", tmp))
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .status(StatusCode::OK)
+            .body(format!("{:?}", tmp))
     } else {
-        HttpResponse::Ok().content_type("application/json").status(StatusCode::INTERNAL_SERVER_ERROR).body("[]")
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body("[]")
     }
 }
 
 #[cfg(not(debug_assertions))]
 #[get("/rooms")]
 async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
-    HttpResponse::Ok().content_type("text/plain").status(StatusCode::NOT_FOUND).body("Not available in release mode")
+    HttpResponse::Forbidden()
+        .content_type("text/plain")
+        .status(StatusCode::FORBIDDEN)
+        .body("Not available in release mode")
 }
 
 #[post("/echo")]
-pub async fn echo(_pool: Data<Pool<ConnectionManager<PgConnection>>>, req_body: String) -> impl Responder {
+pub async fn echo(
+    _pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    req_body: String,
+) -> impl Responder {
     HttpResponse::Ok().body(req_body)
 }
 
