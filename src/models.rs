@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 #[allow(dead_code)]
-#[derive(Queryable)]
+#[derive(Queryable, Serialize, Deserialize)]
 pub struct Room {
-    room_id: diesel::types::Varchar,
-    spotify_id: diesel::types::Varchar,
+    pub room_id: String,
+    pub spotify_id: String,
 }

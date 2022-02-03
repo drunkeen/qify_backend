@@ -11,20 +11,21 @@ use std::time::{Duration, Instant};
 
 use actix::prelude::*;
 use actix_files as fs;
+use actix_web::web::Data;
 use actix_web::{
     get, middleware, post, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder,
 };
-use actix_web::web::Data;
 use actix_web_actors::ws;
-use diesel::{Connection, PgConnection, RunQueryDsl};
-use diesel::query_dsl::InternalJoinDsl;
+use awc::http::StatusCode;
 use diesel::r2d2::ConnectionManager;
+use diesel::{PgConnection, RunQueryDsl};
 use dotenv::dotenv;
 use r2d2::Pool;
+use crate::models::Room;
 
 // pub mod models;
-mod schema;
 mod models;
+mod schema;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_millis(4500);
@@ -115,12 +116,15 @@ async fn hello() -> impl Responder {
 #[get("/search")]
 async fn search(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     let connection = pool.get().expect("Could not create connection");
-    let res = schema::room::table.load(&connection);
+    let res = schema::room::table.load::<Room>(&connection);
 
     if let Ok(result) = res {
-        HttpResponse::Ok().body(result)
+        let tmp = serde_json::to_string(&result).unwrap_or(String::from("Empty vec"));
+
+        // let to_string = to_string.unwrap_or(String::from("Empty vector"));
+        HttpResponse::Ok().content_type("application/json").status(StatusCode::OK).body(format!("{:?}", tmp))
     } else {
-        HttpResponse::Ok().body("No results were found")
+        HttpResponse::Ok().content_type("application/json").status(StatusCode::INTERNAL_SERVER_ERROR).body("[]")
     }
 }
 
@@ -132,7 +136,6 @@ async fn echo(req_body: String) -> impl Responder {
 async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
-
 
 // pub fn establish_connection() -> PgConnection {
 //     dotenv().ok();
@@ -158,8 +161,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             // enable logger
-            .wrap(middleware::Logger::default())
             .data(pool.clone())
+            .wrap(middleware::Logger::default())
             .service(hello)
             .service(echo)
             .service(search)
