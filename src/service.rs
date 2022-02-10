@@ -36,7 +36,7 @@ pub fn get_all_rooms(pool: &Data<Pool<ConnectionManager<PgConnection>>>) -> impl
             data: None,
             status_code: 500,
             success: false,
-            error: Some(String::from("ROOMS: Could not connect to database")),
+            error: Some("ROOMS: Could not connect to database"),
         }
     };
 

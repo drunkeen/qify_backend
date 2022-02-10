@@ -2,6 +2,7 @@ mod models;
 mod routes;
 mod schema;
 mod service;
+mod spotify_api;
 mod websocket;
 
 #[macro_use]
@@ -9,6 +10,7 @@ extern crate diesel;
 
 use std::env;
 
+use actix_files as fs;
 use actix_web::{middleware, web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
@@ -36,14 +38,15 @@ async fn main() -> std::io::Result<()> {
         App::new()
             // enable logger
             .data(pool.clone())
-            .wrap(middleware::Logger::default())
+            // .wrap(middleware::Logger::default())
             .service(crate::routes::echo)
             .service(crate::routes::rooms)
+            .service(crate::routes::spotify_authenticate)
             .route("/hey", web::get().to(crate::routes::hello))
             // websocket route
             .service(web::resource("/ws/").route(web::get().to(crate::websocket::ws_index)))
-        // static files
-        // .service(fs::Files::new("/", "static/").index_file("index.html"))
+            // static files
+            .service(fs::Files::new("/", "static/").index_file("index.html"))
     })
     // start http server on 127.0.0.1:8080
     .bind("127.0.0.1:8080")?
