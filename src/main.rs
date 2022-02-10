@@ -3,6 +3,7 @@ mod routes;
 mod schema;
 mod service;
 mod spotify_api;
+mod spotify_models;
 mod websocket;
 
 #[macro_use]
@@ -41,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             // .wrap(middleware::Logger::default())
             .service(crate::routes::echo)
             .service(crate::routes::rooms)
+            .service(crate::routes::accounts)
             .service(crate::routes::spotify_authenticate)
             .route("/hey", web::get().to(crate::routes::hello))
             // websocket route

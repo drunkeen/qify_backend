@@ -19,9 +19,9 @@ table! {
     spotify (id) {
         id -> Int4,
         spotify_id -> Varchar,
-        access_token -> Text,
-        refresh_token -> Text,
-        refresh_date -> Timestamp,
+        access_token -> Varchar,
+        refresh_token -> Varchar,
+        expire_date -> Timestamp,
     }
 }
 

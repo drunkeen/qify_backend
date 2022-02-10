@@ -1,36 +1,21 @@
 use crate::models::GenericOutput;
+use crate::spotify_models;
 use actix_web::client::Client;
-use serde::{Deserialize, Serialize};
 use std::env;
 
 const REDIRECT_URL: &str = "http://127.0.0.1:8080/callback.html";
 const ENDPOINT_AUTH_TOKEN: &str = "https://accounts.spotify.com/api/token";
+const ENDPOINT_ME: &str = "https://api.spotify.com/v1/me";
 
-#[derive(Serialize, Deserialize)]
-struct Authenticate {
-    grant_type: String,
-    code: String,
-    redirect_uri: String,
-    client_id: String,
-    client_secret: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SpotifyTokens {
-    access_token: String,
-    token_type: String,
-    expires_in: u16,
-    refresh_token: String,
-    scope: String,
-}
+type SpotifyResult<T> = Result<GenericOutput<T>, Box<dyn std::error::Error>>;
 
 pub async fn api_spotify_authenticate(
     code: String,
-) -> Result<GenericOutput<SpotifyTokens>, Box<dyn std::error::Error>> {
+) -> SpotifyResult<spotify_models::SpotifyTokens> {
     let client = Client::default();
 
     // Create request builder and send request
-    let data = Authenticate {
+    let data = spotify_models::Authenticate {
         grant_type: String::from("authorization_code"),
         code,
         redirect_uri: String::from(REDIRECT_URL),
@@ -46,12 +31,34 @@ pub async fn api_spotify_authenticate(
         .send_body(&data) // <- Send request
         .await?; // <- Wait for response
 
-    let data = response.body().await?;
-    let data: &str = std::str::from_utf8(&*data)?;
-    let data = serde_json::from_str::<SpotifyTokens>(data)?;
+    let result = response.body().await?;
+    let result: &str = std::str::from_utf8(&*result)?;
+    let result = serde_json::from_str::<spotify_models::SpotifyTokens>(result)?;
 
     Ok(GenericOutput {
-        data: Some(data),
+        data: Some(result),
+        error: None,
+        success: true,
+        status_code: 200,
+    })
+}
+
+pub async fn api_spotify_me(access_token: String) -> SpotifyResult<spotify_models::SpotifyMe> {
+    let client = Client::default();
+
+    // Create request builder and send request
+    let mut response = client
+        .get(ENDPOINT_ME)
+        .header("Authorization", format!("Bearer {}", access_token))
+        .send()
+        .await?; // <- Wait for response
+
+    let result = response.body().await?;
+    let result: &str = std::str::from_utf8(&*result)?;
+    let result = serde_json::from_str::<spotify_models::SpotifyMe>(result)?;
+
+    Ok(GenericOutput {
+        data: Some(result),
         error: None,
         success: true,
         status_code: 200,

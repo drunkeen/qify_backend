@@ -1,10 +1,34 @@
 use serde::{Deserialize, Serialize};
 
+use crate::schema::room;
+use crate::schema::spotify;
+
 #[allow(dead_code)]
-#[derive(Queryable, Serialize, Deserialize)]
+#[derive(Queryable, Serialize, Deserialize, Insertable, Debug)]
+#[table_name = "room"]
 pub struct Room {
     pub room_id: String,
     pub spotify_id: String,
+}
+
+#[allow(dead_code)]
+#[derive(Queryable, Serialize, Deserialize)]
+pub struct SpotifyUser {
+    pub id: i32,
+    pub spotify_id: String,
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expire_date: std::time::SystemTime,
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize, Insertable)]
+#[table_name = "spotify"]
+pub struct NewSpotifyUser {
+    pub spotify_id: String,
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expire_date: std::time::SystemTime,
 }
 
 #[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq)]
@@ -31,6 +55,9 @@ pub const NOT_IMPLEMENTED_RELEASE_MODE: &str =
 #[allow(dead_code)]
 pub const INTERNAL_SERVER_ERROR: &str =
     r#"{"data":null,"success":false,"status_code":500,"error":"INTERNAL_SERVER_ERROR"}"#;
+
+#[allow(dead_code)]
+pub const SPOTIFY_API_FORBIDDEN: &str = r#"{"data":null,"success":false,"status_code":400,"error":"Non-premium accounts can't access Spotify API"}"#;
 
 #[test]
 fn serde_error_deserialize() {
