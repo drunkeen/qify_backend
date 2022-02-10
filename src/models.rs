@@ -9,6 +9,7 @@ use crate::schema::spotify;
 pub struct Room {
     pub room_id: String,
     pub spotify_id: String,
+    pub room_id_short: String,
 }
 
 #[allow(dead_code)]

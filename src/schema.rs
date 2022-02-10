@@ -2,6 +2,7 @@ table! {
     room (room_id) {
         room_id -> Varchar,
         spotify_id -> Varchar,
+        room_id_short -> Varchar,
     }
 }
 
