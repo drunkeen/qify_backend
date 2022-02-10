@@ -68,7 +68,6 @@ pub fn create_room(
             .map(char::from)
             .collect::<String>()
             .to_uppercase();
-        println!("Trying {}", room_id);
 
         let results = diesel::insert_into(room::dsl::room)
             .values(vec![Room {
@@ -78,12 +77,11 @@ pub fn create_room(
             .get_results::<Room>(&connection);
 
         if let Err(_) = results {
-            println!("A room '{}' with said already exists", room_id);
+            println!("Room '{}' already exists", room_id);
             continue;
         }
 
         let result = results.unwrap().into_iter().next().unwrap();
-        println!("Done: {:?}", &result);
         return Ok(GenericOutput {
             error: None,
             data: Some(result),
@@ -96,12 +94,15 @@ pub fn create_room(
 pub fn create_spotify_id(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
     spotify_user: &NewSpotifyUser,
-) -> ServiceResult<Vec<SpotifyUser>> {
+) -> ServiceResult<SpotifyUser> {
     let connection = pool.get().expect("Could not create connection");
     let results = diesel::insert_into(schema::spotify::dsl::spotify)
         .values(vec![spotify_user])
         .on_conflict_do_nothing()
-        .get_results::<SpotifyUser>(&connection)?;
+        .get_results::<SpotifyUser>(&connection)?
+        .into_iter()
+        .next()
+        .unwrap();
 
     Ok(GenericOutput {
         error: None,
