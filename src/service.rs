@@ -1,44 +1,44 @@
 use actix_web::web::Data;
-use actix_web::{HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::{PgConnection, RunQueryDsl};
 use r2d2::Pool;
-use serde::Serialize;
 
 use crate::models;
+use crate::models::{GenericOutput, Room};
 use crate::schema;
 
-fn respond<T: Serialize>(data: T) -> impl Responder {
-    if let Ok(result) = serde_json::to_string(&data) {
-        HttpResponse::Ok()
-            .content_type("application/json")
-            .body(format!("{:?}", result))
-    } else {
-        HttpResponse::InternalServerError()
-            .content_type("application/json")
-            .body(format!("{:?}", models::SERDE_ERROR))
-    }
+type ServiceResult<T> = Result<GenericOutput<T>, Box<dyn std::error::Error>>;
+
+pub fn get_all_rooms(
+    pool: &Data<Pool<ConnectionManager<PgConnection>>>,
+) -> ServiceResult<Vec<Room>> {
+    let connection = pool.get().expect("Could not create connection");
+    let res = schema::room::table.load::<models::Room>(&connection)?;
+
+    Ok(models::GenericOutput {
+        data: Some(res),
+        status_code: 200,
+        success: true,
+        error: None,
+    })
 }
 
-pub fn get_all_rooms(pool: &Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
-    let connection = pool.get().expect("Could not create connection");
-    let res = schema::room::table.load::<models::Room>(&connection);
+pub fn create_room(pool: &Data<Pool<ConnectionManager<PgConnection>>>) -> ServiceResult<u8> {
+    let _connection = pool.get().expect("Could not create connection");
 
-    let result = if let Ok(result) = res {
-        models::GenericOutput {
-            data: Some(result),
-            status_code: 200,
-            success: true,
-            error: None,
-        }
-    } else {
-        models::GenericOutput {
-            data: None,
-            status_code: 500,
-            success: false,
-            error: Some("ROOMS: Could not connect to database"),
-        }
-    };
+    Ok(GenericOutput {
+        error: None,
+        data: None,
+        success: false,
+        status_code: 501,
+    })
+}
 
-    respond(result)
+pub fn add_tokens(_pool: &Data<Pool<ConnectionManager<PgConnection>>>) -> ServiceResult<u8> {
+    Ok(GenericOutput {
+        error: None,
+        data: None,
+        success: false,
+        status_code: 501,
+    })
 }

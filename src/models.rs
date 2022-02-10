@@ -12,7 +12,7 @@ pub struct GenericOutput<T: Serialize> {
     pub data: Option<T>,
     pub success: bool,
     pub status_code: u16,
-    pub error: Option<&'static str>,
+    pub error: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -26,7 +26,11 @@ pub const SERDE_ERROR: &str =
 
 #[allow(dead_code)]
 pub const NOT_IMPLEMENTED_RELEASE_MODE: &str =
-    r#"{"data":null,"success":false,"status_code":500,"error":"Not implemented in release mode"}"#;
+    r#"{"data":null,"success":false,"status_code":501,"error":"Not implemented in release mode"}"#;
+
+#[allow(dead_code)]
+pub const INTERNAL_SERVER_ERROR: &str =
+    r#"{"data":null,"success":false,"status_code":500,"error":"INTERNAL_SERVER_ERROR"}"#;
 
 #[test]
 fn serde_error_deserialize() {
@@ -36,7 +40,7 @@ fn serde_error_deserialize() {
             data: None,
             status_code: 500,
             success: false,
-            error: Some("JSON: Error converting to string"),
+            error: Some(String::from("JSON: Error converting to string")),
         };
 
         assert!(result == expected);
