@@ -11,7 +11,7 @@ extern crate diesel;
 use std::env;
 
 use actix_files as fs;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use dotenv::dotenv;

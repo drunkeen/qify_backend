@@ -1,9 +1,7 @@
 use crate::models::GenericOutput;
 use actix_web::client::Client;
-use awc::error::SendRequestError;
 use serde::{Deserialize, Serialize};
 use std::env;
-use std::io::ErrorKind;
 
 const REDIRECT_URL: &str = "http://127.0.0.1:8080/callback.html";
 const ENDPOINT_AUTH_TOKEN: &str = "https://accounts.spotify.com/api/token";
@@ -24,14 +22,6 @@ pub struct SpotifyTokens {
     expires_in: u16,
     refresh_token: String,
     scope: String,
-}
-
-pub struct SpotifyId {
-    access_token: String,
-    token_type: String,
-    scope: String,
-    expires_in: u16,
-    refresh_token: String,
 }
 
 pub async fn api_spotify_authenticate(

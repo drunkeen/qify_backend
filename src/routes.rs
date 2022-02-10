@@ -37,7 +37,7 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
 
 #[post("/spotifyAuthenticate")]
 pub async fn spotify_authenticate(
-    pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    _pool: Data<Pool<ConnectionManager<PgConnection>>>,
     info: web::Json<models::Code>,
 ) -> impl Responder {
     let body = info.0;
@@ -51,7 +51,7 @@ pub async fn spotify_authenticate(
                 data: None,
                 status_code: 500,
                 success: false,
-                error: Some("")
+                error: Some("Spotify Auth: Could not retrieve tokens")
             })),
     }
 }

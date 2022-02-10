@@ -20,9 +20,11 @@ pub struct Code {
     pub code: String,
 }
 
+#[allow(dead_code)]
 pub const SERDE_ERROR: &str =
     r#"{"data":null,"success":false,"status_code":500,"error":"JSON: Error converting to string"}"#;
 
+#[allow(dead_code)]
 pub const NOT_IMPLEMENTED_RELEASE_MODE: &str =
     r#"{"data":null,"success":false,"status_code":500,"error":"Not implemented in release mode"}"#;
 
