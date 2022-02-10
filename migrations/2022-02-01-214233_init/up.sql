@@ -3,11 +3,11 @@
 CREATE TABLE "spotify" (
     "id" SERIAL PRIMARY KEY,
 
-    "spotify_id" VARCHAR(64) NOT NULL,
+    "spotify_id" VARCHAR(64) NOT NULL UNIQUE,
 
-    "access_token" TEXT NOT NULL,
-    "refresh_token" TEXT NOT NULL,
-    "refresh_date" TIMESTAMP NOT NULL
+    "access_token" VARCHAR(203) NOT NULL,
+    "refresh_token" VARCHAR(131) NOT NULL,
+    "expire_date" TIMESTAMP NOT NULL
 );
 
 CREATE TABLE "song" (
