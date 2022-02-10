@@ -1,6 +1,6 @@
 use actix_web::web::Data;
 use diesel::r2d2::ConnectionManager;
-use diesel::{PgConnection, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{PgConnection, RunQueryDsl};
 use r2d2::Pool;
 use rand::{distributions::Alphanumeric, Rng};
 
@@ -64,7 +64,7 @@ pub fn create_room(
         // Check as many room_id as needed
         let room_id: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
-            .take(1)
+            .take(64)
             .map(char::from)
             .collect::<String>()
             .to_uppercase();
@@ -77,7 +77,7 @@ pub fn create_room(
             }])
             .get_results::<Room>(&connection);
 
-        if let Err(error) = results {
+        if let Err(_) = results {
             println!("A room '{}' with said already exists", room_id);
             continue;
         }
