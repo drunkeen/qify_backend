@@ -1,36 +1,8 @@
+pub mod room;
+pub mod spotify_api;
+pub mod spotify_id;
+
 use serde::{Deserialize, Serialize};
-
-use crate::schema::room;
-use crate::schema::spotify;
-
-#[allow(dead_code)]
-#[derive(Queryable, Serialize, Deserialize, Insertable, Debug)]
-#[table_name = "room"]
-pub struct Room {
-    pub room_id: String,
-    pub spotify_id: String,
-    pub room_id_short: String,
-}
-
-#[allow(dead_code)]
-#[derive(Queryable, Serialize, Deserialize)]
-pub struct SpotifyUser {
-    pub id: i32,
-    pub spotify_id: String,
-    pub access_token: String,
-    pub refresh_token: String,
-    pub expire_date: std::time::SystemTime,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize, Insertable)]
-#[table_name = "spotify"]
-pub struct NewSpotifyUser {
-    pub spotify_id: String,
-    pub access_token: String,
-    pub refresh_token: String,
-    pub expire_date: std::time::SystemTime,
-}
 
 #[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq)]
 pub struct GenericOutput<T: Serialize> {
@@ -38,11 +10,6 @@ pub struct GenericOutput<T: Serialize> {
     pub success: bool,
     pub status_code: u16,
     pub error: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Code {
-    pub code: String,
 }
 
 #[allow(dead_code)]

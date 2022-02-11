@@ -64,3 +64,8 @@ pub struct SpotifyMe {
     pub uri: String,
     pub error: Option<SpotifyMeError>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Code {
+    pub code: String,
+}

@@ -13,7 +13,8 @@ use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::service::{create_room, create_spotify_id, get_all_accounts, get_all_rooms};
 use crate::spotify_api::{api_spotify_authenticate, api_spotify_me};
 
-use crate::models::NewSpotifyUser;
+use crate::models::spotify_api::Code;
+use crate::models::spotify_id::NewSpotifyUser;
 use serde::Serialize;
 
 fn respond<T: Serialize>(data: T) -> HttpResponse {
@@ -89,7 +90,7 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
 #[post("/spotifyAuthenticate")]
 pub async fn spotify_authenticate(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
-    info: web::Json<models::Code>,
+    info: web::Json<Code>,
 ) -> impl Responder {
     let body = info.0;
     let tokens = api_spotify_authenticate(body.code).await;

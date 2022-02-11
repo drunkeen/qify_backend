@@ -3,7 +3,6 @@ mod routes;
 mod schema;
 mod service;
 mod spotify_api;
-mod spotify_models;
 mod websocket;
 
 #[macro_use]

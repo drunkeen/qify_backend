@@ -7,7 +7,9 @@ use rand::{distributions::Alphanumeric, Rng};
 use diesel::prelude::*;
 
 use crate::models;
-use crate::models::{GenericOutput, NewSpotifyUser, Room, SpotifyUser};
+use crate::models::room::Room;
+use crate::models::spotify_id::{NewSpotifyUser, SpotifyUser};
+use crate::models::GenericOutput;
 use crate::schema;
 
 type ServiceResult<T> = Result<GenericOutput<T>, Box<dyn std::error::Error>>;
@@ -16,7 +18,7 @@ pub fn get_all_rooms(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<Room>> {
     let connection = pool.get().expect("Could not create connection");
-    let res = schema::room::table.load::<models::Room>(&connection)?;
+    let res = schema::room::table.load::<Room>(&connection)?;
 
     Ok(models::GenericOutput {
         data: Some(res),
@@ -30,7 +32,7 @@ pub fn get_all_accounts(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<SpotifyUser>> {
     let connection = pool.get().expect("Could not create connection");
-    let res = schema::spotify::table.load::<models::SpotifyUser>(&connection)?;
+    let res = schema::spotify::table.load::<SpotifyUser>(&connection)?;
 
     Ok(models::GenericOutput {
         data: Some(res),
@@ -49,7 +51,7 @@ pub fn create_room(
 
     let existing_rooms = room::table
         .filter(room::spotify_id.eq(&spotify_user.spotify_id))
-        .load::<models::Room>(&connection)?;
+        .load::<Room>(&connection)?;
     if !existing_rooms.is_empty() {
         // A rooms for spotify_id already exists
         return Ok(GenericOutput {
