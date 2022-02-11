@@ -10,11 +10,11 @@ use crate::models;
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 
-use crate::service::{create_room, create_spotify_id, get_all_accounts, get_all_rooms};
 use crate::spotify_api::{api_spotify_authenticate, api_spotify_me};
 
+use crate::models::room::{create_room, get_all_rooms};
 use crate::models::spotify_api::Code;
-use crate::models::spotify_id::NewSpotifyUser;
+use crate::models::spotify_id::{create_spotify_id, get_all_accounts, NewSpotifyUser};
 use serde::Serialize;
 
 fn respond<T: Serialize>(data: T) -> HttpResponse {

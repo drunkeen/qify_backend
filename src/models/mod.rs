@@ -4,6 +4,8 @@ pub mod spotify_id;
 
 use serde::{Deserialize, Serialize};
 
+pub type ServiceResult<T> = Result<GenericOutput<T>, Box<dyn std::error::Error>>;
+
 #[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq)]
 pub struct GenericOutput<T: Serialize> {
     pub data: Option<T>,

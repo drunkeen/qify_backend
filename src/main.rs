@@ -1,7 +1,6 @@
 mod models;
 mod routes;
 mod schema;
-mod service;
 mod spotify_api;
 mod websocket;
 
