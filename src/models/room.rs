@@ -54,24 +54,25 @@ pub fn create_room(
         });
     }
 
+    // Check as many room_id as needed
     loop {
-        // Check as many room_id as needed
         let room_id: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(64)
             .map(char::from)
             .collect::<String>()
             .to_uppercase();
-        let room_id_short = String::from(room_id.clone().split_at(6).0);
+        let room_id_short = &room_id[0..6];
 
         let results = diesel::insert_into(room::dsl::room)
             .values(vec![Room {
                 spotify_id: spotify_user.spotify_id.clone(),
                 room_id: room_id.clone(),
-                room_id_short: room_id_short.clone(),
+                room_id_short: String::from(room_id_short),
             }])
             .get_results::<Room>(&connection);
 
+        // A room with `room_id_short` already exists
         if let Err(_) = results {
             println!("Room '{}' already exists", &room_id_short);
             continue;
