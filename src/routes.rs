@@ -1,3 +1,4 @@
+use actix_web::http::StatusCode;
 use actix_web::web::Data;
 use actix_web::{get, post, web, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
@@ -17,8 +18,8 @@ use crate::models::spotify_api::Code;
 use crate::models::spotify_id::{create_spotify_id, get_all_accounts, NewSpotifyUser};
 use serde::Serialize;
 
-fn respond<T: Serialize>(data: T) -> HttpResponse {
-    if let Ok(result) = serde_json::to_string(&data) {
+fn respond<T: Serialize>(body: T) -> HttpResponse {
+    if let Ok(result) = serde_json::to_string(&body) {
         HttpResponse::Ok()
             .content_type("application/json")
             .body(result)
@@ -29,21 +30,41 @@ fn respond<T: Serialize>(data: T) -> HttpResponse {
     }
 }
 
-fn res_or_error<T: Serialize>(
-    data: Result<GenericOutput<T>, Box<dyn std::error::Error>>,
-    error_message: &str,
-) -> GenericOutput<T> {
-    match data {
-        Ok(data) => data,
-        Err(error) => GenericOutput {
-            #[cfg(debug_assertions)]
-            error: Some(format!("{}, error: {}", error_message, error)),
-            #[cfg(not(debug_assertions))]
-            error: Some(String::from(error_message)),
-            data: None,
-            success: false,
-            status_code: 500,
-        },
+fn send_error(
+    error: Box<dyn std::error::Error>,
+    status_code: u16,
+    error_text: &'static str,
+) -> HttpResponse {
+    let status = StatusCode::from_u16(status_code);
+    if let Err(_) = status {
+        eprintln!("Status code should always be a valid status code");
+        return HttpResponse::InternalServerError()
+            .content_type("application/json")
+            .body(models::INTERNAL_SERVER_ERROR);
+    }
+
+    let status = status.unwrap();
+
+    #[cfg(debug_assertions)]
+    let error = format!("{}, error: {}", error_text, error.to_string());
+    #[cfg(not(debug_assertions))]
+    let error = format!("{}", error_text);
+
+    let data = GenericOutput::<u8> {
+        data: None,
+        error: Some(error),
+        success: false,
+        status_code,
+    };
+
+    if let Ok(result) = serde_json::to_string(&data) {
+        HttpResponse::build(status)
+            .content_type("application/json")
+            .body(result)
+    } else {
+        HttpResponse::InternalServerError()
+            .content_type("application/json")
+            .body(models::SERDE_ERROR)
     }
 }
 
@@ -62,10 +83,18 @@ pub async fn echo(
 #[get("/rooms")]
 pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     #[cfg(debug_assertions)]
-    return respond(res_or_error(
-        get_all_rooms(&pool),
-        "Rooms: Could not retrieve any room",
-    ));
+    {
+        let rooms = get_all_rooms(&pool);
+        if let Err(error) = rooms {
+            return send_error(error, 500, "Rooms: Could not retrieve any room");
+        }
+        return respond(GenericOutput {
+            data: Some(rooms.unwrap()),
+            error: None,
+            success: true,
+            status_code: 200,
+        });
+    }
 
     #[cfg(not(debug_assertions))]
     return HttpResponse::Forbidden()
@@ -76,10 +105,18 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
 #[get("/accounts")]
 pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
     #[cfg(debug_assertions)]
-    return respond(res_or_error(
-        get_all_accounts(&pool),
-        "Rooms: Could not retrieve any room",
-    ));
+    {
+        let accounts = get_all_accounts(&pool);
+        if let Err(error) = accounts {
+            return send_error(error, 500, "Accounts: Could not retrieve any account");
+        }
+        return respond(GenericOutput {
+            data: Some(accounts.unwrap()),
+            error: None,
+            success: true,
+            status_code: 200,
+        });
+    }
 
     #[cfg(not(debug_assertions))]
     return HttpResponse::Forbidden()
@@ -94,39 +131,29 @@ pub async fn spotify_authenticate(
 ) -> impl Responder {
     let body = info.0;
     let tokens = api_spotify_authenticate(body.code).await;
-    let data = res_or_error(
-        tokens,
-        "Spotify Auth: Could not retrieve tokens from spotify",
-    );
 
-    if !&data.success {
-        return respond(data);
+    if let Err(error) = tokens {
+        return send_error(error, 500, "Spotify Auth: Could not retrieve tokens");
     }
 
-    let spotify_tokens = data.data.as_ref().unwrap();
+    let spotify_tokens = tokens.unwrap();
     let timestamp =
         std::time::SystemTime::now().add(Duration::from_secs(spotify_tokens.expires_in as u64));
 
-    let spotify_user = api_spotify_me(spotify_tokens.access_token.clone()).await;
+    let spotify_user = api_spotify_me(&spotify_tokens.access_token).await;
     if let Err(error) = spotify_user {
-        eprintln!("spotify_authenticate: me: {}", error);
-        return HttpResponse::InternalServerError()
-            .content_type("application/json")
-            .body(models::INTERNAL_SERVER_ERROR);
+        return send_error(error, 500, "Spotify me: Could not access user information");
     }
 
     let spotify_user = spotify_user.unwrap();
-    let spotify_user = spotify_user.data.unwrap();
-
     if spotify_user.product != String::from("premium") {
-        eprintln!(
-            "spotify_authenticate: premium: {} is not premium: {}",
-            spotify_user.id, spotify_user.product
+        return send_error(
+            String::from("").into(),
+            403,
+            "Spotify me: Spotify account needs to be premium",
         );
-        return HttpResponse::Forbidden()
-            .content_type("application/json")
-            .body(models::SPOTIFY_API_FORBIDDEN);
     }
+
     let new_spotify_user = NewSpotifyUser {
         spotify_id: spotify_user.id,
         access_token: spotify_tokens.access_token.clone(),
@@ -136,19 +163,18 @@ pub async fn spotify_authenticate(
 
     let spotify_id = create_spotify_id(&pool, &new_spotify_user);
     if let Err(error) = spotify_id {
-        eprintln!("spotify_authenticate: db: {}", error);
-        return HttpResponse::InternalServerError()
-            .content_type("application/json")
-            .body(models::INTERNAL_SERVER_ERROR);
+        return send_error(error, 500, "Create account: Could not add user");
     }
 
-    let spotify_id = create_room(&pool, &new_spotify_user);
-    if let Err(error) = spotify_id {
-        eprintln!("spotify_authenticate: db: {}", error);
-        return HttpResponse::InternalServerError()
-            .content_type("application/json")
-            .body(models::INTERNAL_SERVER_ERROR);
+    let room = create_room(&pool, &new_spotify_user);
+    if let Err(error) = room {
+        return send_error(error, 500, "Create room: Could not create a new room");
     }
 
-    respond(data)
+    respond(GenericOutput {
+        data: Some(room.unwrap()),
+        error: None,
+        status_code: 200,
+        success: true,
+    })
 }
