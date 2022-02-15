@@ -34,12 +34,7 @@ pub fn get_all_accounts(
     let connection = pool.get().expect("Could not create connection");
     let res = schema::spotify::table.load::<SpotifyUser>(&connection)?;
 
-    Ok(GenericOutput {
-        data: Some(res),
-        status_code: 200,
-        success: true,
-        error: None,
-    })
+    Ok(res)
 }
 
 pub fn create_spotify_id(
@@ -63,10 +58,5 @@ pub fn create_spotify_id(
         return Err(format!("Could not create or update spotify user").into());
     }
 
-    Ok(GenericOutput {
-        error: None,
-        data: Some(results.unwrap()),
-        success: true,
-        status_code: 200,
-    })
+    Ok(results.unwrap())
 }

@@ -4,7 +4,7 @@ pub mod spotify_id;
 
 use serde::{Deserialize, Serialize};
 
-pub type ServiceResult<T> = Result<GenericOutput<T>, Box<dyn std::error::Error>>;
+pub type ServiceResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq)]
 pub struct GenericOutput<T: Serialize> {
@@ -15,19 +15,16 @@ pub struct GenericOutput<T: Serialize> {
 }
 
 #[allow(dead_code)]
-pub const SERDE_ERROR: &str =
-    r#"{"data":null,"success":false,"status_code":500,"error":"JSON: Error converting to string"}"#;
+pub const SERDE_ERROR: &str = r#"JSON: Error converting to string"#; // 500
 
 #[allow(dead_code)]
-pub const NOT_IMPLEMENTED_RELEASE_MODE: &str =
-    r#"{"data":null,"success":false,"status_code":501,"error":"Not implemented in release mode"}"#;
+pub const NOT_IMPLEMENTED_RELEASE_MODE: &str = r#"Not implemented in release mode"#; // 501
 
 #[allow(dead_code)]
-pub const INTERNAL_SERVER_ERROR: &str =
-    r#"{"data":null,"success":false,"status_code":500,"error":"INTERNAL_SERVER_ERROR"}"#;
+pub const INTERNAL_SERVER_ERROR: &str = r#"INTERNAL_SERVER_ERROR"#; // 500
 
 #[allow(dead_code)]
-pub const SPOTIFY_API_FORBIDDEN: &str = r#"{"data":null,"success":false,"status_code":400,"error":"Non-premium accounts can't access Spotify API"}"#;
+pub const SPOTIFY_API_FORBIDDEN: &str = r#"Non-premium accounts can't access Spotify API"#; // 403
 
 #[test]
 fn serde_error_deserialize() {

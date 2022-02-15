@@ -27,12 +27,7 @@ pub fn get_all_rooms(
     let connection = pool.get().expect("Could not create connection");
     let res = schema::room::table.load::<Room>(&connection)?;
 
-    Ok(models::GenericOutput {
-        data: Some(res),
-        status_code: 200,
-        success: true,
-        error: None,
-    })
+    Ok(res)
 }
 
 pub fn create_room(
@@ -45,13 +40,10 @@ pub fn create_room(
         .filter(room::spotify_id.eq(&spotify_user.spotify_id))
         .load::<Room>(&connection)?;
     if !existing_rooms.is_empty() {
+        #[cfg(debug_assertions)]
+        println!("Room already exists for user {}", &spotify_user.spotify_id);
         // A rooms for spotify_id already exists
-        return Ok(GenericOutput {
-            error: None,
-            data: Some(existing_rooms.into_iter().next().unwrap()),
-            success: true,
-            status_code: 200,
-        });
+        return Ok(existing_rooms.into_iter().next().unwrap());
     }
 
     // Check as many room_id as needed
@@ -79,11 +71,6 @@ pub fn create_room(
         }
 
         let result = results.unwrap().into_iter().next().unwrap();
-        return Ok(GenericOutput {
-            error: None,
-            data: Some(result),
-            success: true,
-            status_code: 200,
-        });
+        return Ok(result);
     }
 }
