@@ -1,6 +1,5 @@
 use crate::models::spotify_api;
 use crate::models::spotify_api::{SpotifyMe, SpotifyTokens};
-use crate::models::GenericOutput;
 use actix_web::client::Client;
 use std::env;
 
@@ -8,7 +7,7 @@ const REDIRECT_URL: &str = "http://127.0.0.1:8080/callback.html";
 const ENDPOINT_AUTH_TOKEN: &str = "https://accounts.spotify.com/api/token";
 const ENDPOINT_ME: &str = "https://api.spotify.com/v1/me";
 
-type SpotifyResult<T> = Result<GenericOutput<T>, Box<dyn std::error::Error>>;
+type SpotifyResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 pub async fn api_spotify_authenticate(code: String) -> SpotifyResult<SpotifyTokens> {
     let client = Client::default();
@@ -34,15 +33,10 @@ pub async fn api_spotify_authenticate(code: String) -> SpotifyResult<SpotifyToke
     let result: &str = std::str::from_utf8(&*result)?;
     let result = serde_json::from_str::<SpotifyTokens>(result)?;
 
-    Ok(GenericOutput {
-        data: Some(result),
-        error: None,
-        success: true,
-        status_code: 200,
-    })
+    Ok(result)
 }
 
-pub async fn api_spotify_me(access_token: String) -> SpotifyResult<SpotifyMe> {
+pub async fn api_spotify_me(access_token: &String) -> SpotifyResult<SpotifyMe> {
     let client = Client::default();
 
     // Create request builder and send request
@@ -56,10 +50,5 @@ pub async fn api_spotify_me(access_token: String) -> SpotifyResult<SpotifyMe> {
     let result: &str = std::str::from_utf8(&*result)?;
     let result = serde_json::from_str::<SpotifyMe>(result)?;
 
-    Ok(GenericOutput {
-        data: Some(result),
-        error: None,
-        success: true,
-        status_code: 200,
-    })
+    Ok(result)
 }
