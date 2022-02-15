@@ -27,23 +27,6 @@ pub const INTERNAL_SERVER_ERROR: &str = r#"INTERNAL_SERVER_ERROR"#; // 500
 pub const SPOTIFY_API_FORBIDDEN: &str = r#"Non-premium accounts can't access Spotify API"#; // 403
 
 #[test]
-fn serde_error_deserialize() {
-    let serde = serde_json::from_str::<GenericOutput<u8>>(&SERDE_ERROR);
-    if let Ok(result) = serde {
-        let expected: GenericOutput<u8> = GenericOutput {
-            data: None,
-            status_code: 500,
-            success: false,
-            error: Some(String::from("JSON: Error converting to string")),
-        };
-
-        assert!(result == expected);
-    } else if let Err(result) = serde {
-        panic!("\n{}\n", result);
-    }
-}
-
-#[test]
 fn generic_output_serialize() {
     let obj = GenericOutput {
         data: Some("Very good test"),

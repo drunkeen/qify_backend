@@ -7,9 +7,8 @@ use r2d2::Pool;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
-use crate::models;
 use crate::models::spotify_id::NewSpotifyUser;
-use crate::models::{GenericOutput, ServiceResult};
+use crate::models::ServiceResult;
 use crate::schema;
 
 #[allow(dead_code)]

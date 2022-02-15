@@ -4,7 +4,7 @@ use diesel::{PgConnection, RunQueryDsl};
 use r2d2::Pool;
 use serde::{Deserialize, Serialize};
 
-use crate::models::{GenericOutput, ServiceResult};
+use crate::models::ServiceResult;
 use crate::schema;
 use crate::schema::spotify;
 
