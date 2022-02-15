@@ -19,7 +19,7 @@ pub struct SpotifyUser {
 }
 
 #[allow(dead_code)]
-#[derive(Deserialize, Insertable)]
+#[derive(Deserialize, Insertable, AsChangeset)]
 #[table_name = "spotify"]
 pub struct NewSpotifyUser {
     pub spotify_id: String,
@@ -46,15 +46,26 @@ pub fn create_spotify_id(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
     spotify_user: &NewSpotifyUser,
 ) -> ServiceResult<Vec<SpotifyUser>> {
+    use schema::spotify::dsl;
+
     let connection = pool.get().expect("Could not create connection");
-    let results = diesel::insert_into(schema::spotify::dsl::spotify)
-        .values(vec![spotify_user])
-        .on_conflict_do_nothing()
-        .get_results::<SpotifyUser>(&connection)?;
+    let results = diesel::insert_into(dsl::spotify)
+        .values(spotify_user)
+        .on_conflict(dsl::spotify_id)
+        .do_update()
+        .set(spotify_user)
+        .get_results::<SpotifyUser>(&connection);
+
+    if let Err(error) = &results {
+        #[cfg(debug_assertions)]
+        return Err(format!("Could not create or update spotify user, error: {}", error).into());
+        #[cfg(not(debug_assertions))]
+        return Err(format!("Could not create or update spotify user").into());
+    }
 
     Ok(GenericOutput {
         error: None,
-        data: Some(results),
+        data: Some(results.unwrap()),
         success: true,
         status_code: 200,
     })
