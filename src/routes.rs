@@ -137,10 +137,15 @@ pub async fn spotify_authenticate(
     }
 
     let spotify_tokens = tokens.unwrap();
-    let timestamp =
-        std::time::SystemTime::now().add(Duration::from_secs(spotify_tokens.expires_in as u64));
 
-    let spotify_user = api_spotify_me(&spotify_tokens.access_token).await;
+    let (access_token, refresh_token, expires_in) = (
+        spotify_tokens.access_token,
+        spotify_tokens.refresh_token,
+        spotify_tokens.expires_in as u64,
+    );
+    let timestamp = std::time::SystemTime::now().add(Duration::from_secs(expires_in));
+
+    let spotify_user = api_spotify_me(&access_token).await;
     if let Err(error) = spotify_user {
         return send_error(error, 500, "Spotify me: Could not access user information");
     }
@@ -148,7 +153,7 @@ pub async fn spotify_authenticate(
     let spotify_user = spotify_user.unwrap();
     if spotify_user.product != String::from("premium") {
         return send_error(
-            String::from("").into(),
+            String::from("Account not premium").into(),
             403,
             "Spotify me: Spotify account needs to be premium",
         );
@@ -156,8 +161,8 @@ pub async fn spotify_authenticate(
 
     let new_spotify_user = NewSpotifyUser {
         spotify_id: spotify_user.id,
-        access_token: spotify_tokens.access_token.clone(),
-        refresh_token: spotify_tokens.refresh_token.clone(),
+        access_token,
+        refresh_token,
         expire_date: timestamp,
     };
 
