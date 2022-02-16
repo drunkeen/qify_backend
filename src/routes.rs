@@ -18,8 +18,15 @@ use crate::models::spotify_api::Code;
 use crate::models::spotify_id::{create_spotify_id, get_all_accounts, NewSpotifyUser};
 use serde::Serialize;
 
-fn respond<T: Serialize>(body: T) -> HttpResponse {
-    if let Ok(result) = serde_json::to_string(&body) {
+fn send_data<T: Serialize>(body: T) -> HttpResponse {
+    let data = GenericOutput {
+        data: Some(body),
+        error: None,
+        success: true,
+        status_code: 200,
+    };
+
+    if let Ok(result) = serde_json::to_string(&data) {
         HttpResponse::Ok()
             .content_type("application/json")
             .body(result)
@@ -88,12 +95,7 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
         if let Err(error) = rooms {
             return send_error(error, 500, "Rooms: Could not retrieve any room");
         }
-        return respond(GenericOutput {
-            data: Some(rooms.unwrap()),
-            error: None,
-            success: true,
-            status_code: 200,
-        });
+        return send_data(rooms.unwrap());
     }
 
     #[cfg(not(debug_assertions))]
@@ -110,12 +112,7 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
         if let Err(error) = accounts {
             return send_error(error, 500, "Accounts: Could not retrieve any account");
         }
-        return respond(GenericOutput {
-            data: Some(accounts.unwrap()),
-            error: None,
-            success: true,
-            status_code: 200,
-        });
+        return send_data(accounts.unwrap());
     }
 
     #[cfg(not(debug_assertions))]
@@ -176,10 +173,5 @@ pub async fn spotify_authenticate(
         return send_error(error, 500, "Create room: Could not create a new room");
     }
 
-    respond(GenericOutput {
-        data: Some(room.unwrap()),
-        error: None,
-        status_code: 200,
-        success: true,
-    })
+    send_data(room.unwrap())
 }
