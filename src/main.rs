@@ -9,6 +9,8 @@ mod websocket;
 extern crate diesel;
 
 use std::env;
+use std::thread::sleep;
+use std::time::Duration;
 
 use actix_files as fs;
 use actix_web::{web, App, HttpServer};
@@ -34,6 +36,15 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
     let pool = create_pool();
+    let tmp = pool.clone();
+
+    let _ = actix_rt::spawn(async move {
+        loop {
+            let _ = crate::models::room::clear_old_rooms(&tmp);
+            sleep(Duration::from_secs(60));
+        }
+    });
+
     HttpServer::new(move || {
         let app = App::new();
         let app = app.data(pool.clone()).service(crate::routes::echo);

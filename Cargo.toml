@@ -13,6 +13,7 @@ actix-codec = "0.3"
 actix-web = { version = "3", features = ["openssl"] }
 actix-web-actors = "3"
 actix-files = "0.3"
+actix-rt = "1.1.1"
 awc = "2"
 env_logger = "0.8"
 futures = "0.3.1"

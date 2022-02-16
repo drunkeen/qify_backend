@@ -56,7 +56,7 @@ fn send_error(
     let status = status.unwrap();
     let error = format_error(error, error_text);
 
-    let data = GenericOutput::<u8> {
+    let data = GenericOutput::<()> {
         data: None,
         error: Some(error),
         success: false,

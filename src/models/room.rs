@@ -5,12 +5,15 @@ use diesel::{PgConnection, RunQueryDsl};
 use r2d2::Pool;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
+use std::ops::Sub;
+use std::time::Duration;
 
 use crate::models::spotify_id::NewSpotifyUser;
 use crate::models::ServiceResult;
 #[cfg(debug_assertions)]
 use crate::schema;
 use crate::schema::room;
+use crate::utils::format_error;
 
 #[allow(dead_code)]
 #[derive(Queryable, Serialize, Deserialize, Insertable, Debug)]
@@ -19,6 +22,7 @@ pub struct Room {
     pub room_id: String,
     pub spotify_id: String,
     pub room_id_short: String,
+    pub creation_date: std::time::SystemTime,
 }
 
 #[cfg(debug_assertions)]
@@ -62,6 +66,7 @@ pub fn create_room(
                 spotify_id: spotify_user.spotify_id.clone(),
                 room_id: room_id.clone(),
                 room_id_short: String::from(room_id_short),
+                creation_date: std::time::SystemTime::now(),
             }])
             .get_results::<Room>(&connection);
 
@@ -74,4 +79,33 @@ pub fn create_room(
         let result = results.unwrap().into_iter().next().unwrap();
         return Ok(result);
     }
+}
+
+pub fn clear_old_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceResult<()> {
+    use crate::schema::room::dsl;
+    const DAY_DURATION: Duration = Duration::from_secs(60 * 60 * 24);
+
+    let connection = pool.get().expect("Could not create connection");
+
+    let now = std::time::SystemTime::now();
+    let results = diesel::delete(dsl::room)
+        .filter(dsl::creation_date.le(now.sub(DAY_DURATION)))
+        .get_results::<Room>(&connection);
+
+    if let Err(error) = results {
+        return Err(format_error(error.into(), "test").into());
+    }
+
+    let results = results.unwrap();
+    println!(
+        "{:?}: clearing {} rooms: {:?}",
+        std::time::SystemTime::now(),
+        results.len(),
+        results
+            .into_iter()
+            .map(|r| r.spotify_id)
+            .collect::<Vec<String>>()
+    );
+
+    Ok(())
 }
