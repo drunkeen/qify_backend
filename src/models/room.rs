@@ -81,6 +81,34 @@ pub fn create_room(
     }
 }
 
+fn print_rooms(rooms: Vec<Room>) {
+    println!(
+        "{:?}: clearing {} rooms: {:?}",
+        std::time::SystemTime::now(),
+        rooms.len(),
+        rooms
+            .into_iter()
+            .map(|r| r.spotify_id)
+            .collect::<Vec<String>>()
+    );
+}
+
+#[cfg(debug_assertions)]
+pub fn clear_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceResult<()> {
+    use crate::schema::room::dsl;
+    let connection = pool.get().expect("Could not create connection");
+    let results = diesel::delete(dsl::room).get_results::<Room>(&connection);
+
+    if let Err(error) = results {
+        return Err(format_error(error.into(), "test").into());
+    }
+
+    let results = results.unwrap();
+    print_rooms(results);
+
+    Ok(())
+}
+
 pub fn clear_old_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceResult<()> {
     use crate::schema::room::dsl;
     const DAY_DURATION: Duration = Duration::from_secs(60 * 60 * 24);
@@ -97,15 +125,7 @@ pub fn clear_old_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceR
     }
 
     let results = results.unwrap();
-    println!(
-        "{:?}: clearing {} rooms: {:?}",
-        std::time::SystemTime::now(),
-        results.len(),
-        results
-            .into_iter()
-            .map(|r| r.spotify_id)
-            .collect::<Vec<String>>()
-    );
+    print_rooms(results);
 
     Ok(())
 }

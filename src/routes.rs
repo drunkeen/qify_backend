@@ -9,6 +9,8 @@ use std::ops::Add;
 use std::time::Duration;
 
 use crate::models;
+#[cfg(debug_assertions)]
+use crate::models::room::clear_rooms;
 use crate::models::room::create_room;
 #[cfg(debug_assertions)]
 use crate::models::room::get_all_rooms;
@@ -104,6 +106,16 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
         return send_error(error, 500, "Accounts: Could not retrieve any account");
     }
     return send_data(accounts.unwrap());
+}
+
+#[cfg(debug_assertions)]
+#[post("/resetRooms")]
+pub async fn reset_rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+    let res = clear_rooms(&pool);
+    match res {
+        Ok(_) => HttpResponse::Ok().body(""),
+        Err(_) => HttpResponse::InternalServerError().body(models::INTERNAL_SERVER_ERROR),
+    }
 }
 
 #[post("/spotifyAuthenticate")]

@@ -53,7 +53,8 @@ async fn main() -> std::io::Result<()> {
         #[cfg(debug_assertions)]
         let app = app
             .service(crate::routes::rooms)
-            .service(crate::routes::accounts);
+            .service(crate::routes::accounts)
+            .service(crate::routes::reset_rooms);
 
         let app = app.service(crate::routes::spotify_authenticate);
         let app = app
