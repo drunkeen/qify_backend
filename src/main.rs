@@ -39,9 +39,10 @@ async fn main() -> std::io::Result<()> {
     let tmp = pool.clone();
 
     let _ = actix_rt::spawn(async move {
+        const DELAY: Duration = Duration::from_secs(60 * 30);
         loop {
             let _ = crate::models::room::clear_old_rooms(&tmp);
-            sleep(Duration::from_secs(60));
+            sleep(DELAY);
         }
     });
 
