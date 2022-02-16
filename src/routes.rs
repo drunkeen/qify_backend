@@ -4,19 +4,21 @@ use actix_web::{get, post, web, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
+use serde::Serialize;
 use std::ops::Add;
 use std::time::Duration;
 
 use crate::models;
+use crate::models::room::create_room;
+#[cfg(debug_assertions)]
+use crate::models::room::get_all_rooms;
+use crate::models::spotify_api::Code;
+#[cfg(debug_assertions)]
+use crate::models::spotify_id::get_all_accounts;
+use crate::models::spotify_id::{create_spotify_id, NewSpotifyUser};
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
-
 use crate::spotify_api::{api_spotify_authenticate, api_spotify_me};
-
-use crate::models::room::{create_room, get_all_rooms};
-use crate::models::spotify_api::Code;
-use crate::models::spotify_id::{create_spotify_id, get_all_accounts, NewSpotifyUser};
-use serde::Serialize;
 
 fn send_data<T: Serialize>(body: T) -> HttpResponse {
     let data = GenericOutput {
@@ -38,7 +40,8 @@ fn send_data<T: Serialize>(body: T) -> HttpResponse {
 }
 
 fn send_error(
-    error: Box<dyn std::error::Error>,
+    #[cfg(not(debug_assertions))] _error: Box<dyn std::error::Error>,
+    #[cfg(debug_assertions)] error: Box<dyn std::error::Error>,
     status_code: u16,
     error_text: &'static str,
 ) -> HttpResponse {
@@ -88,7 +91,10 @@ pub async fn echo(
 }
 
 #[get("/rooms")]
-pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+pub async fn rooms(
+    #[cfg(debug_assertions)] pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    #[cfg(not(debug_assertions))] _pool: Data<Pool<ConnectionManager<PgConnection>>>,
+) -> impl Responder {
     #[cfg(debug_assertions)]
     {
         let rooms = get_all_rooms(&pool);
@@ -105,7 +111,10 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
 }
 
 #[get("/accounts")]
-pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+pub async fn accounts(
+    #[cfg(debug_assertions)] pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    #[cfg(not(debug_assertions))] _pool: Data<Pool<ConnectionManager<PgConnection>>>,
+) -> impl Responder {
     #[cfg(debug_assertions)]
     {
         let accounts = get_all_accounts(&pool);

@@ -28,6 +28,7 @@ pub struct NewSpotifyUser {
     pub expire_date: std::time::SystemTime,
 }
 
+#[cfg(debug_assertions)]
 pub fn get_all_accounts(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<SpotifyUser>> {
@@ -51,10 +52,12 @@ pub fn create_spotify_id(
         .set(spotify_user)
         .get_results::<SpotifyUser>(&connection);
 
+    #[cfg(debug_assertions)]
     if let Err(error) = &results {
-        #[cfg(debug_assertions)]
         return Err(format!("Could not create or update spotify user, error: {}", error).into());
-        #[cfg(not(debug_assertions))]
+    }
+    #[cfg(not(debug_assertions))]
+    if let Err(_) = &results {
         return Err(format!("Could not create or update spotify user").into());
     }
 

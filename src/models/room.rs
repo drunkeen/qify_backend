@@ -1,4 +1,3 @@
-use crate::schema::room;
 use actix_web::web::Data;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
@@ -9,7 +8,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::spotify_id::NewSpotifyUser;
 use crate::models::ServiceResult;
+#[cfg(debug_assertions)]
 use crate::schema;
+use crate::schema::room;
 
 #[allow(dead_code)]
 #[derive(Queryable, Serialize, Deserialize, Insertable, Debug)]
@@ -20,6 +21,7 @@ pub struct Room {
     pub room_id_short: String,
 }
 
+#[cfg(debug_assertions)]
 pub fn get_all_rooms(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<Room>> {

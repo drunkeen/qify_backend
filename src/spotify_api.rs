@@ -1,7 +1,8 @@
-use crate::models::spotify_api;
-use crate::models::spotify_api::{SpotifyMe, SpotifyTokens};
 use actix_web::client::Client;
 use std::env;
+
+use crate::models::spotify_api;
+use crate::models::spotify_api::{SpotifyMe, SpotifyTokens};
 
 const REDIRECT_URL: &str = "http://127.0.0.1:8080/callback.html";
 const ENDPOINT_AUTH_TOKEN: &str = "https://accounts.spotify.com/api/token";
