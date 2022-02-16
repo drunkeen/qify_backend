@@ -2,6 +2,7 @@ mod models;
 mod routes;
 mod schema;
 mod spotify_api;
+mod utils;
 mod websocket;
 
 #[macro_use]
@@ -34,19 +35,23 @@ async fn main() -> std::io::Result<()> {
 
     let pool = create_pool();
     HttpServer::new(move || {
-        App::new()
-            // enable logger
-            .data(pool.clone())
-            // .wrap(middleware::Logger::default())
-            .service(crate::routes::echo)
+        let app = App::new();
+        let app = app.data(pool.clone()).service(crate::routes::echo);
+
+        #[cfg(debug_assertions)]
+        let app = app
             .service(crate::routes::rooms)
-            .service(crate::routes::accounts)
-            .service(crate::routes::spotify_authenticate)
+            .service(crate::routes::accounts);
+
+        let app = app.service(crate::routes::spotify_authenticate);
+        let app = app
             .route("/hey", web::get().to(crate::routes::hello))
             // websocket route
             .service(web::resource("/ws/").route(web::get().to(crate::websocket::ws_index)))
             // static files
-            .service(fs::Files::new("/", "static/").index_file("index.html"))
+            .service(fs::Files::new("/", "static/").index_file("index.html"));
+
+        app
     })
     // start http server on 127.0.0.1:8080
     .bind("127.0.0.1:8080")?

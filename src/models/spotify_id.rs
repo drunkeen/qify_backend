@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::models::ServiceResult;
 use crate::schema;
 use crate::schema::spotify;
+use crate::utils::format_error;
 
 #[allow(dead_code)]
 #[derive(Queryable, Serialize, Deserialize)]
@@ -52,13 +53,9 @@ pub fn create_spotify_id(
         .set(spotify_user)
         .get_results::<SpotifyUser>(&connection);
 
-    #[cfg(debug_assertions)]
-    if let Err(error) = &results {
-        return Err(format!("Could not create or update spotify user, error: {}", error).into());
-    }
-    #[cfg(not(debug_assertions))]
-    if let Err(_) = &results {
-        return Err(format!("Could not create or update spotify user").into());
+    if let Err(error) = results {
+        let error = format_error(error.into(), "Could not create or update spotify user");
+        return Err(error.into());
     }
 
     Ok(results.unwrap())

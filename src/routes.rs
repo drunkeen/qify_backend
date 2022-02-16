@@ -19,6 +19,7 @@ use crate::models::spotify_id::{create_spotify_id, NewSpotifyUser};
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::spotify_api::{api_spotify_authenticate, api_spotify_me};
+use crate::utils::format_error;
 
 fn send_data<T: Serialize>(body: T) -> HttpResponse {
     let data = GenericOutput {
@@ -40,8 +41,7 @@ fn send_data<T: Serialize>(body: T) -> HttpResponse {
 }
 
 fn send_error(
-    #[cfg(not(debug_assertions))] _error: Box<dyn std::error::Error>,
-    #[cfg(debug_assertions)] error: Box<dyn std::error::Error>,
+    error: Box<dyn std::error::Error>,
     status_code: u16,
     error_text: &'static str,
 ) -> HttpResponse {
@@ -54,11 +54,7 @@ fn send_error(
     }
 
     let status = status.unwrap();
-
-    #[cfg(debug_assertions)]
-    let error = format!("{}, error: {}", error_text, error.to_string());
-    #[cfg(not(debug_assertions))]
-    let error = format!("{}", error_text);
+    let error = format_error(error, error_text);
 
     let data = GenericOutput::<u8> {
         data: None,
@@ -90,44 +86,24 @@ pub async fn echo(
     HttpResponse::Ok().body(req_body)
 }
 
+#[cfg(debug_assertions)]
 #[get("/rooms")]
-pub async fn rooms(
-    #[cfg(debug_assertions)] pool: Data<Pool<ConnectionManager<PgConnection>>>,
-    #[cfg(not(debug_assertions))] _pool: Data<Pool<ConnectionManager<PgConnection>>>,
-) -> impl Responder {
-    #[cfg(debug_assertions)]
-    {
-        let rooms = get_all_rooms(&pool);
-        if let Err(error) = rooms {
-            return send_error(error, 500, "Rooms: Could not retrieve any room");
-        }
-        return send_data(rooms.unwrap());
+pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+    let rooms = get_all_rooms(&pool);
+    if let Err(error) = rooms {
+        return send_error(error, 500, "Rooms: Could not retrieve any room");
     }
-
-    #[cfg(not(debug_assertions))]
-    return HttpResponse::Forbidden()
-        .content_type("text/json")
-        .body(NOT_IMPLEMENTED_RELEASE_MODE);
+    return send_data(rooms.unwrap());
 }
 
+#[cfg(debug_assertions)]
 #[get("/accounts")]
-pub async fn accounts(
-    #[cfg(debug_assertions)] pool: Data<Pool<ConnectionManager<PgConnection>>>,
-    #[cfg(not(debug_assertions))] _pool: Data<Pool<ConnectionManager<PgConnection>>>,
-) -> impl Responder {
-    #[cfg(debug_assertions)]
-    {
-        let accounts = get_all_accounts(&pool);
-        if let Err(error) = accounts {
-            return send_error(error, 500, "Accounts: Could not retrieve any account");
-        }
-        return send_data(accounts.unwrap());
+pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Responder {
+    let accounts = get_all_accounts(&pool);
+    if let Err(error) = accounts {
+        return send_error(error, 500, "Accounts: Could not retrieve any account");
     }
-
-    #[cfg(not(debug_assertions))]
-    return HttpResponse::Forbidden()
-        .content_type("text/json")
-        .body(NOT_IMPLEMENTED_RELEASE_MODE);
+    return send_data(accounts.unwrap());
 }
 
 #[post("/spotifyAuthenticate")]
