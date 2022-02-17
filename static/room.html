@@ -9,7 +9,7 @@
         Home
     </a>
     <br/>
-    <a href="/" id="songs-url">
+    <a href="/" id="songs-url" target="_blank">
         Songs
     </a>
     <br/>
@@ -23,14 +23,12 @@
         <input name="title" id="title" value="" placeholder="song...">
     </div>
     <div>
-        <input value="Submit" type="submit" onclick="submitform()">
+        <input value="Submit" type="submit" onclick="submitForm()">
     </div>
 
 
 
-    <script>
-
-
+<script>
     const roomDOM = window.document.querySelector("#room");
     const songsDOM = window.document.querySelector("#songs");
     const songUrlDOM = window.document.querySelector("#songs-url");
@@ -69,8 +67,8 @@
                 }
 
                 let songs = data.data;
-                let html = songs.map((s) => `<li>${s.id}, ${s.title}</li>`).join("");
-                console.log({ html, len: songs.length });
+                let html = songs.map((s) => `<li>id: ${s.id} | title: ${s.title}</li>`).join("");
+                // console.log({ html, len: songs.length });
                 songsDOM.innerHTML = html;
 
                 return songs;
@@ -79,7 +77,7 @@
 
     getSongs();
 
-    async function submitform() {
+    async function submitForm() {
         const title = window.document.querySelector("#title").value;
         await postData(`/songs/${id}`, { title }).then((data) => console.log(data));
         await getSongs();
