@@ -18,7 +18,19 @@
     <ul id="songs">
     </ul>
 
-<script>
+    <div>
+        <label for="title">What song do you want to add?</label>
+        <input name="title" id="title" value="" placeholder="song...">
+    </div>
+    <div>
+        <input value="Submit" type="submit" onclick="submitform()">
+    </div>
+
+
+
+    <script>
+
+
     const roomDOM = window.document.querySelector("#room");
     const songsDOM = window.document.querySelector("#songs");
     const songUrlDOM = window.document.querySelector("#songs-url");
@@ -48,19 +60,30 @@
         return response.json(); // parses JSON response into native JavaScript objects
     }
 
-    let room = fetch(`http://127.0.0.1:8080/songs/${id}`)
-        .then(async data => {
-            data = await data.json();
-            if (!data.success) {
-                return;
-            }
+    async function getSongs() {
+        return await fetch(`http://127.0.0.1:8080/songs/${id}`)
+            .then(async data => {
+                data = await data.json();
+                if (!data.success) {
+                    return;
+                }
 
-            let songs = data.data;
-            let html = songs.map((s) => `<li>${s}</li>`).join("");
-            console.log({ html, len: songs.length });
-            songsDOM.innerHTML = html;
-        });
+                let songs = data.data;
+                let html = songs.map((s) => `<li>${s.id}, ${s.title}</li>`).join("");
+                console.log({ html, len: songs.length });
+                songsDOM.innerHTML = html;
 
+                return songs;
+            });
+    }
+
+    getSongs();
+
+    async function submitform() {
+        const title = window.document.querySelector("#title").value;
+        await postData(`/songs/${id}`, { title }).then((data) => console.log(data));
+        await getSongs();
+    }
 
 </script>
 </body>
