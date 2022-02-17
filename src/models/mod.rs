@@ -1,4 +1,5 @@
 pub mod room;
+pub mod song;
 pub mod spotify_api;
 pub mod spotify_id;
 

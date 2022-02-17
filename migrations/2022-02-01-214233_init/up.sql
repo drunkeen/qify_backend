@@ -22,5 +22,5 @@ CREATE TABLE "song" (
 
 CREATE TABLE "room" (
     "room_id" VARCHAR(64) NOT NULL PRIMARY KEY,
-    "spotify_id" VARCHAR(64) NOT NULL
+    "spotify_id" VARCHAR(64) NOT NULL UNIQUE
 );

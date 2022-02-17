@@ -13,7 +13,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use actix_files as fs;
-use actix_web::{web, App, HttpServer};
+use actix_web::{middleware, web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use dotenv::dotenv;
@@ -48,15 +48,26 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         let app = App::new();
-        let app = app.data(pool.clone()).service(crate::routes::echo);
+        let app = app.wrap(middleware::Logger::default());
 
+        // Adds database connection pool to all routes
+        let app = app.data(pool.clone());
+
+        // Adds routes avail. only in debug
         #[cfg(debug_assertions)]
         let app = app
             .service(crate::routes::rooms)
             .service(crate::routes::accounts)
             .service(crate::routes::reset_rooms);
 
+        // Song
+        let app = app
+            .service(crate::routes::get_songs)
+            .service(crate::routes::add_songs);
+
+        // Calls spotify auth
         let app = app.service(crate::routes::spotify_authenticate);
+
         let app = app
             .route("/hey", web::get().to(crate::routes::hello))
             // websocket route
