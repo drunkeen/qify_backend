@@ -56,20 +56,19 @@ async fn main() -> std::io::Result<()> {
         // Adds routes avail. only in debug
         #[cfg(debug_assertions)]
         let app = app
-            .service(crate::routes::rooms)
-            .service(crate::routes::accounts)
-            .service(crate::routes::reset_rooms);
+            .service(crate::routes::room::rooms)
+            .service(crate::routes::spotify::accounts)
+            .service(crate::routes::room::reset_rooms);
 
         // Song
         let app = app
-            .service(crate::routes::get_songs)
-            .service(crate::routes::add_songs);
+            .service(crate::routes::song::get_songs)
+            .service(crate::routes::song::add_songs);
 
         // Calls spotify auth
-        let app = app.service(crate::routes::spotify_authenticate);
+        let app = app.service(crate::routes::spotify::spotify_authenticate);
 
         let app = app
-            .route("/hey", web::get().to(crate::routes::hello))
             // websocket route
             .service(web::resource("/ws/").route(web::get().to(crate::websocket::ws_index)))
             // static files
