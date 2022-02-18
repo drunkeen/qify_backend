@@ -10,10 +10,9 @@ use std::time::Duration;
 
 use crate::models::spotify_id::NewSpotifyUser;
 use crate::models::ServiceResult;
-#[cfg(debug_assertions)]
-use crate::schema;
-use crate::schema::room;
 use crate::utils::format_error;
+
+use crate::schema::room;
 
 #[allow(dead_code)]
 #[derive(Queryable, Serialize, Deserialize, Insertable, Debug)]
@@ -30,7 +29,21 @@ pub fn get_all_rooms(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<Room>> {
     let connection = pool.get().expect("Could not create connection");
-    let res = schema::room::table.load::<Room>(&connection)?;
+    let res = room::table.load::<Room>(&connection)?;
+
+    Ok(res)
+}
+
+pub fn get_one_room(
+    pool: &Data<Pool<ConnectionManager<PgConnection>>>,
+    room_id_full: String,
+) -> ServiceResult<Vec<Room>> {
+    use crate::schema::room::dsl;
+
+    let connection = pool.get().expect("Could not create connection");
+    let res = room::table
+        .filter(dsl::room_id.eq(room_id_full))
+        .load::<Room>(&connection)?;
 
     Ok(res)
 }
@@ -71,7 +84,7 @@ pub fn create_room(
             .get_results::<Room>(&connection);
 
         // A room with `room_id_short` already exists
-        if let Err(_) = results {
+        if results.is_err() {
             println!("Room '{}' already exists", &room_id_short);
             continue;
         }
@@ -96,6 +109,7 @@ fn print_rooms(rooms: Vec<Room>) {
 #[cfg(debug_assertions)]
 pub fn clear_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceResult<()> {
     use crate::schema::room::dsl;
+
     let connection = pool.get().expect("Could not create connection");
     let results = diesel::delete(dsl::room).get_results::<Room>(&connection);
 
@@ -111,6 +125,7 @@ pub fn clear_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceResul
 
 pub fn clear_old_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceResult<()> {
     use crate::schema::room::dsl;
+
     const DAY_DURATION: Duration = Duration::from_secs(60 * 60 * 24);
 
     let connection = pool.get().expect("Could not create connection");

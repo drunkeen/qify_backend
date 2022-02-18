@@ -1,10 +1,11 @@
 use actix_web::web::Data;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, web, Responder};
+#[cfg(debug_assertions)]
+use actix_web::{post, HttpResponse};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
 
-use crate::models;
 #[cfg(debug_assertions)]
 use crate::models::room::clear_rooms;
 #[cfg(debug_assertions)]
@@ -21,7 +22,21 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
     if let Err(error) = rooms {
         return send_error(error, 500, "Rooms: Could not retrieve any room");
     }
-    return send_data(rooms.unwrap());
+
+    send_data(rooms.unwrap())
+}
+
+#[get("/room/{room_id}")]
+pub async fn room(
+    pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    web::Path(room_id): web::Path<String>,
+) -> impl Responder {
+    let room = get_one_room(&pool, room_id);
+    if let Err(error) = room {
+        return send_error(error, 500, "GetOneRoom: Could not retrieve this room");
+    }
+
+    send_data(room.unwrap().get(0))
 }
 
 #[cfg(debug_assertions)]
@@ -30,6 +45,6 @@ pub async fn reset_rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> i
     let res = clear_rooms(&pool);
     match res {
         Ok(_) => HttpResponse::Ok().body(""),
-        Err(_) => HttpResponse::InternalServerError().body(models::INTERNAL_SERVER_ERROR),
+        Err(_) => HttpResponse::InternalServerError().body(crate::models::INTERNAL_SERVER_ERROR),
     }
 }

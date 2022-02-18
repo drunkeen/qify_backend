@@ -35,7 +35,7 @@ pub fn send_error(
     error_text: &'static str,
 ) -> HttpResponse {
     let status = StatusCode::from_u16(status_code);
-    if let Err(_) = status {
+    if status.is_err() {
         eprintln!("Status code should always be a valid status code");
         return HttpResponse::InternalServerError()
             .content_type("application/json")

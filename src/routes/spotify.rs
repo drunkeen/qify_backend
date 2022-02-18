@@ -1,5 +1,7 @@
+#[cfg(debug_assertions)]
+use actix_web::get;
 use actix_web::web::Data;
-use actix_web::{get, post, web, Responder};
+use actix_web::{post, web, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
@@ -43,7 +45,7 @@ pub async fn spotify_authenticate(
     }
 
     let spotify_user = spotify_user.unwrap();
-    if spotify_user.product != String::from("premium") {
+    if spotify_user.product != *"premium" {
         return send_error(
             String::from("Account not premium").into(),
             403,
@@ -78,5 +80,6 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
     if let Err(error) = accounts {
         return send_error(error, 500, "Accounts: Could not retrieve any account");
     }
-    return send_data(accounts.unwrap());
+
+    send_data(accounts.unwrap())
 }

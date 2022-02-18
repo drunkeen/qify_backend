@@ -20,7 +20,8 @@ pub async fn get_songs(
     if let Err(error) = songs {
         return send_error(error, 500, "GetSongs: Could not retrieve any song");
     }
-    return send_data(songs.unwrap());
+
+    send_data(songs.unwrap())
 }
 
 #[derive(Serialize, Deserialize)]
@@ -58,5 +59,5 @@ pub async fn add_songs(
         return send_error(error, 500, "AddSongs: Could not add song to room");
     }
 
-    return send_data(add.unwrap());
+    send_data(add.unwrap())
 }

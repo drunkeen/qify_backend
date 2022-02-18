@@ -65,16 +65,17 @@ async fn main() -> std::io::Result<()> {
             .service(crate::routes::song::get_songs)
             .service(crate::routes::song::add_songs);
 
+        // Room
+        let app = app.service(crate::routes::room::room);
+
         // Calls spotify auth
         let app = app.service(crate::routes::spotify::spotify_authenticate);
 
-        let app = app
+        app
             // websocket route
             .service(web::resource("/ws/").route(web::get().to(crate::websocket::ws_index)))
             // static files
-            .service(fs::Files::new("/", "static/").index_file("index.html"));
-
-        app
+            .service(fs::Files::new("/", "static/").index_file("index.html"))
     })
     // start http server on 127.0.0.1:8080
     .bind("127.0.0.1:8080")?

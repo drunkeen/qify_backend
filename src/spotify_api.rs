@@ -37,7 +37,7 @@ pub async fn api_spotify_authenticate(code: String) -> SpotifyResult<SpotifyToke
     Ok(result)
 }
 
-pub async fn api_spotify_me(access_token: &String) -> SpotifyResult<SpotifyMe> {
+pub async fn api_spotify_me(access_token: &str) -> SpotifyResult<SpotifyMe> {
     let client = Client::default();
 
     // Create request builder and send request
