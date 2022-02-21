@@ -1,7 +1,7 @@
 #[cfg(debug_assertions)]
 use actix_web::get;
 use actix_web::web::Data;
-use actix_web::{post, web, Responder};
+use actix_web::{post, web, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
@@ -12,7 +12,7 @@ use crate::models::room::create_room;
 use crate::models::spotify_api::Code;
 #[cfg(debug_assertions)]
 use crate::models::spotify_id::get_all_accounts;
-use crate::models::spotify_id::{create_spotify_id, NewSpotifyUser};
+use crate::models::spotify_id::{create_spotify_id, get_one_account, NewSpotifyUser};
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error};
@@ -82,4 +82,19 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
     }
 
     send_data(accounts.unwrap())
+}
+
+#[post("/search/{room_id}")]
+pub async fn search(
+    pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    web::Path(room_id): web::Path<String>,
+    data: String,
+) -> impl Responder {
+    let room = get_one_account(&pool, room_id);
+    if let Err(error) = room {
+        return send_error(error, 500, "GetOneRoom: Could not retrieve this room");
+    }
+    // let search_results = api_spotify_search(room.spotify_id);
+
+    return HttpResponse::Ok().body("");
 }

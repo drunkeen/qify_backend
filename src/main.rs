@@ -68,8 +68,10 @@ async fn main() -> std::io::Result<()> {
         // Room
         let app = app.service(crate::routes::room::room);
 
-        // Calls spotify auth
-        let app = app.service(crate::routes::spotify::spotify_authenticate);
+        // Spotify
+        let app = app
+            .service(crate::routes::spotify::spotify_authenticate)
+            .service(crate::routes::spotify::search);
 
         app
             // websocket route
