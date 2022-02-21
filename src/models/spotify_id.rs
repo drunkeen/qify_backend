@@ -4,7 +4,6 @@ use diesel::r2d2::ConnectionManager;
 use diesel::{PgConnection, QueryDsl, RunQueryDsl};
 use r2d2::Pool;
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
 
 use crate::models::ServiceResult;
 use crate::schema;
@@ -48,7 +47,7 @@ pub fn get_one_account(
     use crate::schema::spotify::dsl;
 
     let connection = pool.get().expect("Could not create connection");
-    let _account: Vec<SpotifyUser> = schema::spotify::table
+    let account = schema::spotify::table
         .filter(schema::room::dsl::room_id.eq(room_id_full))
         .inner_join(
             schema::room::table.on(schema::spotify::spotify_id.eq(schema::room::spotify_id)),
@@ -60,16 +59,9 @@ pub fn get_one_account(
             dsl::refresh_token,
             dsl::expire_date,
         ))
-        .load::<SpotifyUser>(&connection)?;
+        .first::<SpotifyUser>(&connection)?;
 
-    // let account = account[0];
-    Ok(SpotifyUser {
-        expire_date: SystemTime::now(),
-        refresh_token: String::from(""),
-        access_token: String::from(""),
-        id: 0,
-        spotify_id: String::from(""),
-    })
+    Ok(account)
 }
 
 pub fn create_spotify_id(
