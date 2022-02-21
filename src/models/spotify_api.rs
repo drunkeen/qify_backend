@@ -69,3 +69,90 @@ pub struct SpotifyMe {
 pub struct Code {
     pub code: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifyExternalId {
+    pub isrc: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifyArtist {
+    pub external_urls: SpotifyExternalUrls,
+    pub followers: SpotifyFollowers,
+    pub genres: Vec<String>,
+    pub href: String,
+    pub id: String,
+
+    pub images: Vec<SpotifyImage>,
+
+    pub name: String,
+    pub popularity: u16,
+    pub r#type: String,
+    pub uri: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifyTrackArtist {
+    external_urls: SpotifyExternalUrls,
+    href: String,
+    id: String,
+    name: String,
+    r#type: String,
+    uri: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifyTrackAlbum {
+    album_type: String,
+    artists: Vec<SpotifyTrackArtist>, // TODO: Update type
+    available_markets: Vec<String>,
+    external_urls: SpotifyExternalUrls,
+    href: String,
+    id: String,
+    images: Vec<SpotifyImage>,
+    name: String,
+    release_date: String,
+    release_date_precision: String,
+    total_tracks: u16,
+    r#type: String,
+    uri: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifyTrack {
+    pub album: SpotifyTrackAlbum,
+    pub artists: Vec<SpotifyTrackArtist>,
+    pub available_markets: Vec<String>,
+
+    pub disc_number: u8,
+    pub duration_ms: u32,
+    pub explicit: bool,
+    pub external_ids: SpotifyExternalId,
+    pub external_urls: SpotifyExternalUrls,
+    pub href: String,
+    pub id: String,
+    pub is_local: bool,
+    pub name: String,
+    pub popularity: u16,
+    pub preview_url: String,
+    pub track_number: u16,
+    pub r#type: String,
+    pub uri: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifySearchResult<T> {
+    href: String,
+    limit: u16,
+    offset: u16,
+    total: u16,
+    next: Option<String>,
+    previous: Option<String>,
+    items: Vec<T>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SpotifySearch {
+    pub artist: SpotifySearchResult<SpotifyArtist>,
+    pub track: SpotifySearchResult<SpotifyTrack>,
+}

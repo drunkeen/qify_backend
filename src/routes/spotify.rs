@@ -88,7 +88,7 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
 pub async fn search(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
     web::Path(room_id): web::Path<String>,
-    data: String,
+    _data: String,
 ) -> impl Responder {
     let room = get_one_account(&pool, room_id);
     if let Err(error) = room {
@@ -96,5 +96,5 @@ pub async fn search(
     }
     // let search_results = api_spotify_search(room.spotify_id);
 
-    return HttpResponse::Ok().body("");
+    HttpResponse::Ok().body("")
 }

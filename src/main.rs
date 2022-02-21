@@ -12,7 +12,9 @@ use std::env;
 use std::thread::sleep;
 use std::time::Duration;
 
+use crate::models::room::get_all_rooms;
 use actix_files as fs;
+use actix_web::web::Data;
 use actix_web::{middleware, web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
@@ -45,6 +47,10 @@ async fn main() -> std::io::Result<()> {
             sleep(DELAY);
         }
     });
+
+    let rooms = get_all_rooms(&Data::new(pool.clone())).unwrap();
+    println!("There still is {} rooms left.\n", rooms.len());
+    println!("{:?}\n", rooms);
 
     HttpServer::new(move || {
         let app = App::new();

@@ -1,4 +1,3 @@
-use crate::models::room::Room;
 use actix_web::web::Data;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
@@ -46,22 +45,20 @@ pub fn get_one_account(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
     room_id_full: String,
 ) -> ServiceResult<SpotifyUser> {
-    use crate::schema::room;
-    use crate::schema::spotify;
     use crate::schema::spotify::dsl;
 
     let connection = pool.get().expect("Could not create connection");
-    let account: Vec<SpotifyUser> = schema::spotify::table
+    let _account: Vec<SpotifyUser> = schema::spotify::table
         .filter(schema::room::dsl::room_id.eq(room_id_full))
         .inner_join(
             schema::room::table.on(schema::spotify::spotify_id.eq(schema::room::spotify_id)),
         )
         .select((
-            schema::spotify::dsl::id,
-            schema::spotify::dsl::spotify_id,
-            schema::spotify::dsl::access_token,
-            schema::spotify::dsl::refresh_token,
-            schema::spotify::dsl::expire_date,
+            dsl::id,
+            dsl::spotify_id,
+            dsl::access_token,
+            dsl::refresh_token,
+            dsl::expire_date,
         ))
         .load::<SpotifyUser>(&connection)?;
 

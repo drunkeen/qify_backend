@@ -53,3 +53,20 @@ pub async fn api_spotify_me(access_token: &str) -> SpotifyResult<SpotifyMe> {
 
     Ok(result)
 }
+
+pub async fn _api_spotify_search(access_token: &str) -> SpotifyResult<SpotifyMe> {
+    let client = Client::default();
+
+    // Create request builder and send request
+    let mut response = client
+        .get(ENDPOINT_ME)
+        .header("Authorization", format!("Bearer {}", access_token))
+        .send()
+        .await?; // <- Wait for response
+
+    let result = response.body().await?;
+    let result: &str = std::str::from_utf8(&*result)?;
+    let result = serde_json::from_str::<SpotifyMe>(result)?;
+
+    Ok(result)
+}
