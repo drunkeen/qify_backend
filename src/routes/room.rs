@@ -36,7 +36,7 @@ pub async fn room(
         return send_error(error, 500, "GetOneRoom: Could not retrieve this room");
     }
 
-    send_data(room.unwrap().get(0))
+    send_data(room.unwrap())
 }
 
 #[cfg(debug_assertions)]

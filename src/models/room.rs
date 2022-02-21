@@ -37,13 +37,13 @@ pub fn get_all_rooms(
 pub fn get_one_room(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
     room_id_full: String,
-) -> ServiceResult<Vec<Room>> {
+) -> ServiceResult<Room> {
     use crate::schema::room::dsl;
 
     let connection = pool.get().expect("Could not create connection");
     let res = room::table
         .filter(dsl::room_id.eq(room_id_full))
-        .load::<Room>(&connection)?;
+        .first::<Room>(&connection)?;
 
     Ok(res)
 }
