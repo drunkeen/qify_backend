@@ -1,7 +1,5 @@
-#[cfg(debug_assertions)]
-use actix_web::get;
 use actix_web::web::Data;
-use actix_web::{post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
@@ -16,7 +14,7 @@ use crate::models::spotify_id::{create_spotify_id, get_one_account, NewSpotifyUs
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error};
-use crate::spotify_api::{api_spotify_authenticate, api_spotify_me};
+use crate::spotify_api::{api_spotify_authenticate, api_spotify_me, api_spotify_search};
 
 #[post("/spotifyAuthenticate")]
 pub async fn spotify_authenticate(
@@ -84,17 +82,35 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
     send_data(accounts.unwrap())
 }
 
-#[post("/search/{room_id}")]
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize)]
+pub struct SearchRequest {
+    pub q: String,
+    pub offset: u16,
+}
+
+#[get("/search/{room_id}")]
 pub async fn search(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
     web::Path(room_id): web::Path<String>,
-    _data: String,
+    web::Query(info): web::Query<SearchRequest>,
 ) -> impl Responder {
-    let room = get_one_account(&pool, room_id);
-    if let Err(error) = room {
-        return send_error(error, 500, "GetOneRoom: Could not retrieve this room");
+    let account = get_one_account(&pool, room_id);
+    if let Err(error) = account {
+        return send_error(
+            error,
+            500,
+            "Search: Could not associate room_id to spotify_id",
+        );
     }
-    // let search_results = api_spotify_search(room.spotify_id);
 
-    HttpResponse::Ok().body("")
+    let account = account.unwrap();
+
+    let search_results = api_spotify_search(&account.access_token, &info.q, info.offset).await;
+    if let Err(error) = search_results {
+        return send_error(error, 500, "Search: Could not fetch data from Spotify");
+    }
+
+    send_data(search_results.unwrap())
 }
