@@ -149,7 +149,7 @@ pub async fn search(
         },
         href: tracks.href,
         limit: tracks.limit,
-        previous: tracks.previous,
+        previous: None,
         total: tracks.total,
     };
 
