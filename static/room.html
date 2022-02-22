@@ -19,12 +19,20 @@
     </ul>
 
     <div>
-        <label for="title">What song do you want to add?</label>
-        <input name="title" id="title" value="" placeholder="song...">
+        <label for="search-track">What song do you want to add?</label>
+        <input name="search-track" id="search-track" value="" placeholder="Search a track">
     </div>
     <div>
         <input value="Submit" type="submit" onclick="submitForm()">
     </div>
+
+    <grid id="search-results" style="    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+    max-width: 800px;">
+
+    </grid>
 
 
 
@@ -32,6 +40,8 @@
     const roomDOM = window.document.querySelector("#room");
     const songsDOM = window.document.querySelector("#songs");
     const songUrlDOM = window.document.querySelector("#songs-url");
+    const searchDOM = window.document.querySelector("#search-track");
+    const searchResultDOM = window.document.querySelector("#search-results");
 
     const params = new Proxy(new URLSearchParams(window.location.search), {
         get: (searchParams, prop) => searchParams.get(prop),
@@ -78,9 +88,24 @@
     getSongs();
 
     async function submitForm() {
-        const title = window.document.querySelector("#title").value;
-        await postData(`/songs/${id}`, { title }).then((data) => console.log(data));
-        await getSongs();
+        // await postData(`/songs/${id}`, { title: searchDOM.value }).then((data) => console.log(data));
+        // let songs = await getSongs();
+        // console.log(songs);
+
+        const data = await (await fetch(`http://127.0.0.1:8080/search/${id}?q=${searchDOM.value}&offset=0`)).json();
+        if (!data.success)
+            return;
+
+        const items = data.data.items;
+        const items_mapped = items.map((i) => `
+<div style="width: 150px;">
+<a href="#" style="color: transparent;">
+  <img src="${i.image}" width="150" />
+</a>
+</div>
+        `).join('\n');
+
+        searchResultDOM.innerHTML = items_mapped;
     }
 
 </script>
