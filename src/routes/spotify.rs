@@ -1,5 +1,5 @@
 use actix_web::web::Data;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
@@ -96,10 +96,18 @@ pub struct SearchResultFiltered {}
 
 #[get("/search/{room_id}")]
 pub async fn search(
+    req: HttpRequest,
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
     web::Path(room_id): web::Path<String>,
-    web::Query(info): web::Query<SearchRequest>,
 ) -> impl Responder {
+    // Hack to remove % decoding
+    let query_string = req.query_string().replace("%", "%25");
+    let query_params = serde_urlencoded::from_str::<SearchRequest>(&query_string);
+    if let Err(error) = query_params {
+        return send_error(error.into(), 400, "Search: Missing fields");
+    }
+
+    let info = query_params.unwrap();
     if info.q.is_empty() {
         return HttpResponse::BadRequest()
             .content_type("application/json")
