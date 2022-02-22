@@ -61,8 +61,6 @@ pub async fn api_spotify_search(
 ) -> SpotifyResult<SpotifySearch> {
     let client = Client::default();
 
-    println!("{}", &access_token);
-
     // Create request builder and send request
     let mut response = client
         .get(format!(
