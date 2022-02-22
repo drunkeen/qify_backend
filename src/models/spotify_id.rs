@@ -42,7 +42,7 @@ pub fn get_all_accounts(
 
 pub fn get_one_account(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
-    room_id_full: String,
+    room_id_full: &str,
 ) -> ServiceResult<SpotifyUser> {
     use crate::schema::spotify::dsl;
 

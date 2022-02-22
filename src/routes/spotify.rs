@@ -1,5 +1,5 @@
 use actix_web::web::Data;
-use actix_web::{get, post, web, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
@@ -84,11 +84,14 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SearchRequest {
     pub q: String,
     pub offset: u16,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct SearchResultFiltered {}
 
 #[get("/search/{room_id}")]
 pub async fn search(
@@ -96,7 +99,13 @@ pub async fn search(
     web::Path(room_id): web::Path<String>,
     web::Query(info): web::Query<SearchRequest>,
 ) -> impl Responder {
-    let account = get_one_account(&pool, room_id);
+    if info.q.is_empty() {
+        return HttpResponse::BadRequest()
+            .content_type("application/json")
+            .body(crate::models::SPOTIFY_API_SEARCH_MISSING_FIELDS);
+    }
+
+    let account = get_one_account(&pool, &room_id);
     if let Err(error) = account {
         return send_error(
             error,
