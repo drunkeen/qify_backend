@@ -3,6 +3,7 @@ use actix_web::{get, post, web, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
+use std::env;
 use std::ops::Add;
 use std::time::Duration;
 
@@ -121,6 +122,8 @@ pub async fn search(
         return send_error(error, 500, "Search: Could not fetch data from Spotify");
     }
 
+    let url = env::var("BACKEND_URL").unwrap_or_else(|_| String::from("http://127.0.0.1:8080"));
+
     let tracks = search_results.unwrap().tracks;
     let filtered_items = tracks
         .items
@@ -139,7 +142,8 @@ pub async fn search(
         offset: tracks.offset,
         next: if tracks.next.is_some() {
             Some(format!(
-                "http://127.0.0.1/search/{}?q={}&offset={}",
+                "{}/search/{}?q={}&offset={}",
+                &url,
                 &room_id,
                 &info.q,
                 &info.offset + 10
