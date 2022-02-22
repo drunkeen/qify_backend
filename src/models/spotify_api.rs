@@ -93,28 +93,28 @@ pub struct SpotifyArtist {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SpotifyTrackArtist {
-    external_urls: SpotifyExternalUrls,
-    href: String,
-    id: String,
-    name: String,
-    r#type: String,
-    uri: String,
+    pub external_urls: SpotifyExternalUrls,
+    pub href: String,
+    pub id: String,
+    pub name: String,
+    pub r#type: String,
+    pub uri: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SpotifyTrackAlbum {
-    album_type: String,
-    artists: Vec<SpotifyTrackArtist>, // TODO: Update type
-    external_urls: SpotifyExternalUrls,
-    href: String,
-    id: String,
-    images: Vec<SpotifyImage>,
-    name: String,
-    release_date: String,
-    release_date_precision: String,
-    total_tracks: u16,
-    r#type: String,
-    uri: String,
+    pub album_type: String,
+    pub artists: Vec<SpotifyTrackArtist>, // TODO: Update type
+    pub external_urls: SpotifyExternalUrls,
+    pub href: String,
+    pub id: String,
+    pub images: Vec<SpotifyImage>,
+    pub name: String,
+    pub release_date: String,
+    pub release_date_precision: String,
+    pub total_tracks: u16,
+    pub r#type: String,
+    pub uri: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -138,14 +138,23 @@ pub struct SpotifyTrack {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct SpotifyTrackFiltered {
+    pub title: String,         // name
+    pub image: Option<String>, // album.images.first()
+    pub album: String,         // album.name
+    pub uri: String,
+    pub duration_ms: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SpotifySearchResult<T> {
-    href: String,
-    limit: u16,
-    offset: u16,
-    total: u16,
-    next: Option<String>,
-    previous: Option<String>,
-    items: Vec<T>,
+    pub href: String,
+    pub limit: u16,
+    pub offset: u16,
+    pub total: u16,
+    pub next: Option<String>,
+    pub previous: Option<String>,
+    pub items: Vec<T>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
