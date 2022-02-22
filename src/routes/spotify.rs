@@ -7,7 +7,7 @@ use std::ops::Add;
 use std::time::Duration;
 
 use crate::models::room::create_room;
-use crate::models::spotify_api::Code;
+use crate::models::spotify_api::{Code, SpotifySearchResult, SpotifyTrackFiltered};
 #[cfg(debug_assertions)]
 use crate::models::spotify_id::get_all_accounts;
 use crate::models::spotify_id::{create_spotify_id, get_one_account, NewSpotifyUser};
@@ -121,5 +121,37 @@ pub async fn search(
         return send_error(error, 500, "Search: Could not fetch data from Spotify");
     }
 
-    send_data(search_results.unwrap())
+    let tracks = search_results.unwrap().tracks;
+    let filtered_items = tracks
+        .items
+        .into_iter()
+        .map(|t| SpotifyTrackFiltered {
+            image: t.album.images.into_iter().map(|i| i.url).next(),
+            uri: t.uri,
+            album: t.album.name,
+            title: t.name,
+            duration_ms: t.duration_ms,
+        })
+        .collect::<Vec<_>>();
+
+    let filtered_search = SpotifySearchResult::<SpotifyTrackFiltered> {
+        items: filtered_items,
+        offset: tracks.offset,
+        next: if tracks.next.is_some() {
+            Some(format!(
+                "http://127.0.0.1/search/{}?q={}&offset={}",
+                &room_id,
+                &info.q,
+                &info.offset + 10
+            ))
+        } else {
+            None
+        },
+        href: tracks.href,
+        limit: tracks.limit,
+        previous: tracks.previous,
+        total: tracks.total,
+    };
+
+    send_data(filtered_search)
 }
