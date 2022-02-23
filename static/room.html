@@ -108,7 +108,7 @@
 
     async function addSong(song) {
         let jsonSong = await JSON.parse(song.replaceAll('`', '"'));
-        await postData(`/songs/${id}`, { title: jsonSong.title }).then((data) => data);
+        await postData(`/songs/${id}`, jsonSong).then((data) => data);
         let songs = await getSongs();
     }
 </script>

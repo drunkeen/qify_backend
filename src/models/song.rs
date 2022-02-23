@@ -13,12 +13,13 @@ use crate::schema::song;
 #[derive(Queryable, Serialize, Deserialize, Debug)]
 pub struct Song {
     pub id: i32,
-
     pub uri: String,
-    pub artist: String,
     pub title: String,
-
     pub room_id: String,
+
+    pub album: String,
+    pub duration_ms: i32,
+    pub image: String,
 }
 
 #[allow(dead_code)]
@@ -26,8 +27,10 @@ pub struct Song {
 #[table_name = "song"]
 pub struct NewSong {
     pub uri: String,
-    pub artist: String,
+    pub album: String,
     pub title: String,
+    pub duration_ms: i32,
+    pub image: String,
 
     pub room_id: String,
 }

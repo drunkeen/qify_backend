@@ -24,9 +24,13 @@ pub async fn get_songs(
     send_data(songs.unwrap())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Props {
     pub title: String,
+    pub duration_ms: i32,
+    pub image: String,
+    pub album: String,
+    pub uri: String,
 }
 
 #[post("/songs/{room_id}")]
@@ -50,8 +54,10 @@ pub async fn add_songs(
         NewSong {
             room_id,
             title: data.title,
-            uri: String::new(),
-            artist: String::new(),
+            uri: data.uri,
+            album: data.album,
+            duration_ms: data.duration_ms,
+            image: data.image,
         },
     );
 

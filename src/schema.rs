@@ -11,9 +11,11 @@ table! {
     song (id) {
         id -> Int4,
         uri -> Text,
-        artist -> Text,
         title -> Text,
         room_id -> Varchar,
+        album -> Text,
+        duration_ms -> Int4,
+        image -> Text,
     }
 }
 
