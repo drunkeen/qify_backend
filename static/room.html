@@ -77,9 +77,8 @@
                 }
 
                 let songs = data.data;
-                let html = songs.map((s) => `<li>id: ${s.id} | title: ${s.title}</li>`).join("");
                 // console.log({ html, len: songs.length });
-                songsDOM.innerHTML = html;
+                songsDOM.innerHTML = songs.map((s) => `<li>id: ${s.id} | title: ${s.title}</li>`).join("");
 
                 return songs;
             });
@@ -97,17 +96,21 @@
             return;
 
         const items = data.data.items;
-        const items_mapped = items.map((i) => `
-<div style="width: 150px;">
+        console.log(items);
+        searchResultDOM.innerHTML = items.map((i) => `
+<div style="width: 150px;" classname="results-images" onclick="addSong(\`${JSON.stringify(i).replaceAll('"', "&quot;").replaceAll('\'', '&apos;')}\`)">
 <a href="#" style="color: transparent;">
   <img src="${i.image}" width="150" />
 </a>
 </div>
         `).join('\n');
-
-        searchResultDOM.innerHTML = items_mapped;
     }
 
+    async function addSong(song) {
+        let jsonSong = await JSON.parse(song.replaceAll('`', '"'));
+        await postData(`/songs/${id}`, { title: jsonSong.title }).then((data) => data);
+        let songs = await getSongs();
+    }
 </script>
 </body>
 </html>
