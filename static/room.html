@@ -50,6 +50,8 @@
     roomDOM.innerHTML = id.slice(0, 6);
     songUrlDOM.setAttribute('href', `/songs/${id}`);
 
+    let currentSongs = [];
+
     async function postData(url = '', data = {}) {
         // Default options are marked with *
         const response = await fetch(url, {
@@ -97,8 +99,11 @@
 
         const items = data.data.items;
         console.log(items);
-        searchResultDOM.innerHTML = items.map((i) => `
-<div style="width: 150px;" classname="results-images" onclick="addSong(\`${JSON.stringify(i).replaceAll('"', "&quot;").replaceAll('\'', '&apos;')}\`)">
+
+        currentSongs= items;
+
+        searchResultDOM.innerHTML = items.map((i, index) => `
+<div style="width: 150px;" classname="results-images" onclick="addSong(${index})">
 <a href="#" style="color: transparent;">
   <img src="${i.image}" width="150" />
 </a>
@@ -106,9 +111,8 @@
         `).join('\n');
     }
 
-    async function addSong(song) {
-        let jsonSong = await JSON.parse(song.replaceAll('`', '"'));
-        await postData(`/songs/${id}`, jsonSong).then((data) => data);
+    async function addSong(i) {
+        await postData(`/songs/${id}`, currentSongs[i]).then((data) => data);
         let songs = await getSongs();
     }
 </script>
