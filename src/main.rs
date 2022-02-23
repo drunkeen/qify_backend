@@ -12,10 +12,13 @@ use std::env;
 use std::thread::sleep;
 use std::time::Duration;
 
+#[cfg(debug_assertions)]
 use crate::models::room::get_all_rooms;
 use actix_files as fs;
+// use actix_web::middleware;
+#[cfg(debug_assertions)]
 use actix_web::web::Data;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use dotenv::dotenv;
@@ -48,13 +51,16 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
-    let rooms = get_all_rooms(&Data::new(pool.clone())).unwrap();
-    println!("There still is {} rooms left.\n", rooms.len());
-    println!("{:?}\n", rooms);
+    #[cfg(debug_assertions)]
+    {
+        let rooms = get_all_rooms(&Data::new(pool.clone())).unwrap();
+        println!("There still is {} rooms left.\n", rooms.len());
+        println!("{:?}\n", rooms);
+    }
 
     HttpServer::new(move || {
         let app = App::new();
-        let app = app.wrap(middleware::Logger::default());
+        // let app = app.wrap(middleware::Logger::default());
 
         // Adds database connection pool to all routes
         let app = app.data(pool.clone());

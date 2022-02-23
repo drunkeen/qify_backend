@@ -136,7 +136,7 @@ pub fn clear_old_rooms(pool: &Pool<ConnectionManager<PgConnection>>) -> ServiceR
         .get_results::<Room>(&connection);
 
     if let Err(error) = results {
-        return Err(format_error(error.into(), "test").into());
+        return Err(format_error(error.into(), "Could not delete older rooms").into());
     }
 
     let results = results.unwrap();

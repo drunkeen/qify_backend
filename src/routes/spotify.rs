@@ -3,6 +3,7 @@ use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
+use serde::{Deserialize, Serialize};
 use std::env;
 use std::ops::Add;
 use std::time::Duration;
@@ -16,6 +17,12 @@ use crate::models::spotify_id::{create_spotify_id, get_one_account, NewSpotifyUs
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error};
 use crate::spotify_api::{api_spotify_authenticate, api_spotify_me, api_spotify_search};
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SearchProps {
+    pub q: String,
+    pub offset: u16,
+}
 
 #[post("/spotifyAuthenticate")]
 pub async fn spotify_authenticate(
@@ -83,17 +90,6 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
     send_data(accounts.unwrap())
 }
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct SearchRequest {
-    pub q: String,
-    pub offset: u16,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct SearchResultFiltered {}
-
 #[get("/search/{room_id}")]
 pub async fn search(
     req: HttpRequest,
@@ -102,7 +98,7 @@ pub async fn search(
 ) -> impl Responder {
     // Hack to remove % decoding
     let query_string = req.query_string().replace("%", "%25");
-    let query_params = serde_urlencoded::from_str::<SearchRequest>(&query_string);
+    let query_params = serde_urlencoded::from_str::<SearchProps>(&query_string);
     if let Err(error) = query_params {
         return send_error(error.into(), 400, "Search: Missing fields");
     }
@@ -116,11 +112,8 @@ pub async fn search(
 
     let account = get_one_account(&pool, &room_id);
     if let Err(error) = account {
-        return send_error(
-            error,
-            500,
-            "Search: Could not associate room_id to spotify_id",
-        );
+        const ERROR: &str = "Search: Could not associate room_id to spotify_id";
+        return send_error(error, 500, ERROR);
     }
 
     let account = account.unwrap();

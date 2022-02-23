@@ -11,6 +11,15 @@ use crate::models::song::{add_song, NewSong};
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error};
 
+#[derive(Serialize, Deserialize, Debug)]
+struct AddSongProps {
+    pub title: String,
+    pub duration_ms: i32,
+    pub image: String,
+    pub album: String,
+    pub uri: String,
+}
+
 #[get("/songs/{room_id}")]
 pub async fn get_songs(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
@@ -24,28 +33,16 @@ pub async fn get_songs(
     send_data(songs.unwrap())
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Props {
-    pub title: String,
-    pub duration_ms: i32,
-    pub image: String,
-    pub album: String,
-    pub uri: String,
-}
-
 #[post("/songs/{room_id}")]
 pub async fn add_songs(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
     web::Path(room_id): web::Path<String>,
     data: String,
 ) -> impl Responder {
-    let data = serde_json::from_str::<Props>(&*data);
+    let data = serde_json::from_str::<AddSongProps>(&*data);
     if let Err(error) = data {
-        return send_error(
-            error.into(),
-            500,
-            "AddSongs: Data should contain fields room_id and title",
-        );
+        const ERROR: &str = "AddSongs: Data should contain fields room_id and title";
+        return send_error(error.into(), 500, ERROR);
     }
 
     let data = data.unwrap();
