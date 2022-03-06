@@ -62,3 +62,14 @@ pub fn send_error(
             .body(models::SERDE_ERROR)
     }
 }
+
+#[derive(Debug)]
+pub struct StringError(&'static str);
+
+impl std::fmt::Display for StringError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for StringError {}

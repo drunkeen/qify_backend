@@ -107,13 +107,14 @@
 <a href="#" style="color: transparent;">
   <img src="${i.image}" width="150" />
 </a>
-</div>
-        `).join('\n');
+</div>`).join('\n');
     }
 
     async function addSong(i) {
-        await postData(`/songs/${id}`, currentSongs[i]).then((data) => data);
-        let songs = await getSongs();
+        const data =await postData(`/songs/${id}`, currentSongs[i]);
+        console.log(data);
+        if (!data.success) return;
+        const songs = await getSongs();
     }
 </script>
 </body>

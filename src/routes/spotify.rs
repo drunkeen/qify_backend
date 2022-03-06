@@ -97,7 +97,7 @@ pub async fn search(
     web::Path(room_id): web::Path<String>,
 ) -> impl Responder {
     // Hack to remove % decoding
-    let query_string = req.query_string().replace("%", "%25");
+    let query_string = req.query_string().replace('%', "%25");
     let query_params = serde_urlencoded::from_str::<SearchProps>(&query_string);
     if let Err(error) = query_params {
         return send_error(error.into(), 400, "Search: Missing fields");

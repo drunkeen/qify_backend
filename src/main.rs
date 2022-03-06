@@ -9,6 +9,7 @@ mod websocket;
 extern crate diesel;
 
 use std::env;
+use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -41,15 +42,18 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
     let pool = create_pool();
-    let tmp = pool.clone();
+    let pool_clone = pool.clone();
 
     let _ = actix_rt::spawn(async move {
         const DELAY: Duration = Duration::from_secs(60 * 30);
         loop {
-            let _ = crate::models::room::clear_old_rooms(&tmp);
+            let _ = crate::models::room::clear_old_rooms(&pool_clone);
             sleep(DELAY);
         }
     });
+
+    // Key: RoomId / Value: song uri
+    let latest_insert = std::collections::HashMap::<String, String>::new();
 
     #[cfg(debug_assertions)]
     {
@@ -64,6 +68,7 @@ async fn main() -> std::io::Result<()> {
 
         // Adds database connection pool to all routes
         let app = app.data(pool.clone());
+        let app = app.data(Mutex::new(latest_insert.clone()));
 
         // Adds routes avail. only in debug
         #[cfg(debug_assertions)]
