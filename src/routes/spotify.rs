@@ -4,8 +4,10 @@ use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
 use std::ops::Add;
+use std::sync::Mutex;
 use std::time::Duration;
 
 use crate::models::room::create_room;
@@ -17,6 +19,8 @@ use crate::models::spotify_id::{create_spotify_id, get_one_account, NewSpotifyUs
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error};
 use crate::spotify_api::{api_spotify_authenticate, api_spotify_me, api_spotify_search};
+use crate::utils::RoomAction;
+use crate::RoomData;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SearchProps {
@@ -28,6 +32,7 @@ pub struct SearchProps {
 pub async fn spotify_authenticate(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
     info: web::Json<Code>,
+    latest_inserts: Data<Mutex<HashMap<String, RoomData>>>,
 ) -> impl Responder {
     let body = info.0;
     let tokens = api_spotify_authenticate(body.code).await;
@@ -76,7 +81,18 @@ pub async fn spotify_authenticate(
         return send_error(error, 500, "Create account: Could not add user");
     }
 
-    send_data(room.unwrap())
+    let res = room.unwrap();
+
+    const DEFAULT_ROOM: RoomData = RoomData {
+        action: RoomAction::RoomConnect,
+        uri: String::new(),
+        latest_change: std::time::SystemTime::UNIX_EPOCH,
+    };
+
+    let mut latest_inserts = latest_inserts.lock().unwrap();
+    latest_inserts.insert(res.room_id.clone(), DEFAULT_ROOM);
+
+    send_data(res)
 }
 
 #[cfg(debug_assertions)]
@@ -94,8 +110,14 @@ pub async fn accounts(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl
 pub async fn search(
     req: HttpRequest,
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    latest_inserts: Data<Mutex<HashMap<String, RoomData>>>,
     web::Path(room_id): web::Path<String>,
 ) -> impl Responder {
+    let mut latest_inserts = latest_inserts.lock().unwrap();
+    if let Some(room_latest) = latest_inserts.get_mut(&room_id) {
+        (*room_latest).update(None, Some(RoomAction::SongSearch));
+    }
+
     // Hack to remove % decoding
     let query_string = req.query_string().replace('%', "%25");
     let query_params = serde_urlencoded::from_str::<SearchProps>(&query_string);

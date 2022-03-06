@@ -12,6 +12,7 @@ use crate::models::song::{add_song, NewSong};
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error, StringError};
+use crate::utils::{RoomAction, RoomData};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct AddSongProps {
@@ -25,8 +26,14 @@ struct AddSongProps {
 #[get("/songs/{room_id}")]
 pub async fn get_songs(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    latest_inserts: Data<Mutex<HashMap<String, RoomData>>>,
     web::Path(room_id): web::Path<String>,
 ) -> impl Responder {
+    let mut latest_inserts = latest_inserts.lock().unwrap();
+    if let Some(room_latest) = latest_inserts.get_mut(&room_id) {
+        (*room_latest).update(None, Some(RoomAction::SongSearch));
+    }
+
     let songs = get_all_songs(&pool, room_id);
     if let Err(error) = songs {
         return send_error(error, 500, "GetSongs: Could not retrieve any song");
@@ -38,7 +45,7 @@ pub async fn get_songs(
 #[post("/songs/{room_id}")]
 pub async fn add_songs(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
-    latest_inserts: Data<Mutex<HashMap<String, String>>>,
+    latest_inserts: Data<Mutex<HashMap<String, RoomData>>>,
     web::Path(room_id): web::Path<String>,
     data: String,
 ) -> impl Responder {
@@ -51,17 +58,19 @@ pub async fn add_songs(
     let mut latest_inserts = latest_inserts.lock().unwrap();
 
     let data = data.unwrap();
-    if latest_inserts.get(&room_id) == Some(&data.uri) {
-        return send_error(
-            Box::new(StringError("Logic Error")),
-            500,
-            "AddSongs: Trying to add the last song again",
-        );
+    if let Some(latest) = latest_inserts.get(&room_id) {
+        if latest.uri == data.uri {
+            return send_error(
+                Box::new(StringError("Logic Error")),
+                500,
+                "AddSongs: Trying to add the last song again",
+            );
+        }
     }
 
-    latest_inserts.insert(room_id.clone(), data.uri.clone());
-
-    // latest_inserts.insert(&room_id, &data.uri);
+    if let Some(room_latest) = latest_inserts.get_mut(&room_id) {
+        (*room_latest).update(Some(data.uri.clone()), Some(RoomAction::SongAdd));
+    }
 
     let add = add_song(
         &pool,

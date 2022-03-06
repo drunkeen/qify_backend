@@ -5,6 +5,8 @@ use actix_web::{post, HttpResponse};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use r2d2::Pool;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 #[cfg(debug_assertions)]
 use crate::models::room::clear_rooms;
@@ -14,6 +16,7 @@ use crate::models::room::get_one_room;
 #[allow(unused_imports)]
 use crate::models::{GenericOutput, NOT_IMPLEMENTED_RELEASE_MODE};
 use crate::routes::{send_data, send_error};
+use crate::utils::{RoomAction, RoomData};
 
 #[cfg(debug_assertions)]
 #[get("/rooms")]
@@ -29,8 +32,14 @@ pub async fn rooms(pool: Data<Pool<ConnectionManager<PgConnection>>>) -> impl Re
 #[get("/room/{room_id}")]
 pub async fn room(
     pool: Data<Pool<ConnectionManager<PgConnection>>>,
+    latest_inserts: Data<Mutex<HashMap<String, RoomData>>>,
     web::Path(room_id): web::Path<String>,
 ) -> impl Responder {
+    let mut latest_inserts = latest_inserts.lock().unwrap();
+    if let Some(room_latest) = latest_inserts.get_mut(&room_id) {
+        (*room_latest).update(None, Some(RoomAction::RoomData));
+    }
+
     let room = get_one_room(&pool, room_id);
     if let Err(error) = room {
         return send_error(error, 500, "GetOneRoom: Could not retrieve this room");

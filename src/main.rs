@@ -17,6 +17,7 @@ use std::time::Duration;
 use crate::models::room::get_all_rooms;
 use actix_files as fs;
 // use actix_web::middleware;
+use crate::utils::RoomData;
 #[cfg(debug_assertions)]
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
@@ -53,7 +54,7 @@ async fn main() -> std::io::Result<()> {
     });
 
     // Key: RoomId / Value: song uri
-    let latest_insert = std::collections::HashMap::<String, String>::new();
+    let latest_insert = std::collections::HashMap::<String, RoomData>::new();
 
     #[cfg(debug_assertions)]
     {
