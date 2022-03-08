@@ -47,6 +47,16 @@ async fn main() -> std::io::Result<()> {
     let pool = create_pool();
     let pool_clone = pool.clone();
 
+    #[cfg(debug_assertions)]
+    {
+        let rooms = get_all_rooms(&Data::new(pool.clone())).unwrap();
+        println!("There still is {} rooms left.\n", rooms.len());
+        println!("{:?}\n", rooms);
+    }
+
+    // Refresh all spotify accounts
+    // Fails if DB is not accessible
+    let _ = crate::models::spotify_id::refresh_all_accounts(&pool_clone).await;
     actix_rt::spawn(async move {
         const DELAY: Duration = Duration::from_secs(60 * 30);
         let mut interval = actix_rt::time::interval(DELAY);
@@ -55,25 +65,15 @@ async fn main() -> std::io::Result<()> {
 
             // Removes old rooms
             let _ = crate::models::room::clear_old_rooms(&pool_clone);
-            // Refresh all spotify accounts
-            let _ = crate::models::spotify_id::refresh_all_accounts(&pool_clone).await;
         }
     });
 
     // Key: RoomId / Value: song uri
-
     let rooms = crate::models::room::get_all_rooms(&Data::new(pool.clone())).unwrap();
     let latest_insert = rooms
         .into_iter()
         .map(|r| (r.room_id, ROOM_ACTION_DEFAULT))
         .collect::<HashMap<_, _>>();
-
-    #[cfg(debug_assertions)]
-    {
-        let rooms = get_all_rooms(&Data::new(pool.clone())).unwrap();
-        println!("There still is {} rooms left.\n", rooms.len());
-        println!("{:?}\n", rooms);
-    }
 
     HttpServer::new(move || {
         let app = App::new();
