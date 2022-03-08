@@ -7,6 +7,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 use std::ops::Sub;
 use std::time::Duration;
+use time;
 
 use crate::models::spotify_id::NewSpotifyUser;
 use crate::models::ServiceResult;
@@ -15,7 +16,7 @@ use crate::utils::format_error;
 use crate::schema::room;
 
 #[allow(dead_code)]
-#[derive(Queryable, Serialize, Deserialize, Insertable, Debug)]
+#[derive(Queryable, Serialize, Deserialize, Insertable, Debug, Eq, PartialEq, Hash)]
 #[table_name = "room"]
 pub struct Room {
     pub room_id: String,
@@ -96,8 +97,9 @@ pub fn create_room(
 
 fn print_rooms(rooms: Vec<Room>) {
     println!(
-        "{:?}: clearing {} rooms: {:?}",
-        std::time::SystemTime::now(),
+        "{}: clearing {} rooms: {:?}",
+        // Prints the date in the following format YYYY-MM-DD HH:MM:SS
+        &time::OffsetDateTime::from(std::time::SystemTime::now()).to_string()[..19],
         rooms.len(),
         rooms
             .into_iter()
