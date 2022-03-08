@@ -31,6 +31,7 @@ pub struct NewSpotifyUser {
     pub expire_date: std::time::SystemTime,
 }
 
+#[cfg(debug_assertions)]
 pub fn get_all_accounts(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<SpotifyUser>> {

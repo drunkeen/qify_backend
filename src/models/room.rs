@@ -25,7 +25,6 @@ pub struct Room {
     pub creation_date: std::time::SystemTime,
 }
 
-#[cfg(debug_assertions)]
 pub fn get_all_rooms(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<Room>> {

@@ -12,16 +12,15 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
 
-#[cfg(debug_assertions)]
-use crate::models::room::get_all_rooms;
 use actix_files as fs;
 // use actix_web::middleware;
 use crate::utils::{create_pool, RoomData, ROOM_ACTION_DEFAULT};
-use actix_web::dev::Service;
 #[cfg(debug_assertions)]
+use actix_web::dev::Service;
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
+#[cfg(debug_assertions)]
 use futures::FutureExt;
 
 #[actix_web::main]
@@ -35,7 +34,7 @@ async fn main() -> std::io::Result<()> {
 
     #[cfg(debug_assertions)]
     {
-        let rooms = get_all_rooms(&Data::new(pool.clone())).unwrap();
+        let rooms = crate::models::room::get_all_rooms(&Data::new(pool.clone())).unwrap();
         println!("There still is {} rooms left.\n", rooms.len());
         println!("{:?}\n", rooms);
     }
