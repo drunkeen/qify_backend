@@ -44,6 +44,7 @@ pub fn get_all_songs(
     let connection = pool.get().expect("Could not create connection");
     let results = schema::song::table
         .filter(dsl::room_id.eq(room_id))
+        .order_by(dsl::id)
         .load::<Song>(&connection)?;
 
     Ok(results)
