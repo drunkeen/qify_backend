@@ -9,7 +9,6 @@ mod websocket;
 extern crate diesel;
 
 use std::collections::HashMap;
-use std::env;
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -17,26 +16,13 @@ use std::time::Duration;
 use crate::models::room::get_all_rooms;
 use actix_files as fs;
 // use actix_web::middleware;
-use crate::utils::{RoomData, ROOM_ACTION_DEFAULT};
+use crate::utils::{create_pool, RoomData, ROOM_ACTION_DEFAULT};
 use actix_web::dev::Service;
 #[cfg(debug_assertions)]
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
-use diesel::r2d2::ConnectionManager;
-use diesel::PgConnection;
 use dotenv::dotenv;
 use futures::FutureExt;
-use r2d2::Pool;
-
-fn create_pool() -> Pool<ConnectionManager<PgConnection>> {
-    // let connection = establish_connection();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
-
-    r2d2::Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool.")
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
