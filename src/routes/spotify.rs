@@ -76,11 +76,6 @@ pub async fn spotify_authenticate(
         return send_error(error, 500, "Create room: Could not create a new room");
     }
 
-    let spotify_id = create_spotify_id(&pool, &new_spotify_user);
-    if let Err(error) = spotify_id {
-        return send_error(error, 500, "Create account: Could not add user");
-    }
-
     let res = room.unwrap();
 
     const DEFAULT_ROOM: RoomData = RoomData {
@@ -91,6 +86,11 @@ pub async fn spotify_authenticate(
 
     let mut latest_inserts = latest_inserts.lock().unwrap();
     latest_inserts.insert(res.room_id.clone(), DEFAULT_ROOM);
+
+    let spotify_id = create_spotify_id(&pool, &new_spotify_user);
+    if let Err(error) = spotify_id {
+        return send_error(error, 500, "Create account: Could not add user");
+    }
 
     send_data(res)
 }

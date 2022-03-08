@@ -8,11 +8,11 @@ pub fn format_error(_error: Box<dyn std::error::Error>, error_message: &'static 
     error_message.to_string()
 }
 
-// pub const ROOM_ACTION_DEFAULT: RoomData = RoomData {
-//     action: RoomAction::Unknown,
-//     uri: String::new(),
-//     latest_change: std::time::SystemTime::UNIX_EPOCH,
-// };
+pub const ROOM_ACTION_DEFAULT: RoomData = RoomData {
+    action: RoomAction::Unknown,
+    uri: String::new(),
+    latest_change: std::time::SystemTime::UNIX_EPOCH,
+};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]

@@ -8,22 +8,24 @@ mod websocket;
 #[macro_use]
 extern crate diesel;
 
+use std::collections::HashMap;
 use std::env;
 use std::sync::Mutex;
-use std::thread::sleep;
 use std::time::Duration;
 
 #[cfg(debug_assertions)]
 use crate::models::room::get_all_rooms;
 use actix_files as fs;
 // use actix_web::middleware;
-use crate::utils::RoomData;
+use crate::utils::{RoomData, ROOM_ACTION_DEFAULT};
+use actix_web::dev::Service;
 #[cfg(debug_assertions)]
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
 use diesel::r2d2::ConnectionManager;
 use diesel::PgConnection;
 use dotenv::dotenv;
+use futures::FutureExt;
 use r2d2::Pool;
 
 fn create_pool() -> Pool<ConnectionManager<PgConnection>> {
@@ -45,16 +47,26 @@ async fn main() -> std::io::Result<()> {
     let pool = create_pool();
     let pool_clone = pool.clone();
 
-    let _ = actix_rt::spawn(async move {
+    actix_rt::spawn(async move {
         const DELAY: Duration = Duration::from_secs(60 * 30);
+        let mut interval = actix_rt::time::interval(DELAY);
         loop {
+            interval.tick().await;
+
+            // Removes old rooms
             let _ = crate::models::room::clear_old_rooms(&pool_clone);
-            sleep(DELAY);
+            // Refresh all spotify accounts
+            let _ = crate::models::spotify_id::refresh_all_accounts(&pool_clone).await;
         }
     });
 
     // Key: RoomId / Value: song uri
-    let latest_insert = std::collections::HashMap::<String, RoomData>::new();
+
+    let rooms = crate::models::room::get_all_rooms(&Data::new(pool.clone())).unwrap();
+    let latest_insert = rooms
+        .into_iter()
+        .map(|r| (r.room_id, ROOM_ACTION_DEFAULT))
+        .collect::<HashMap<_, _>>();
 
     #[cfg(debug_assertions)]
     {
@@ -66,6 +78,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let app = App::new();
         // let app = app.wrap(middleware::Logger::default());
+        #[cfg(debug_assertions)]
+        let app = app.wrap_fn(|req, srv| {
+            println!("{}\t{}", req.method(), req.path());
+            srv.call(req).map(|res| res)
+        });
 
         // Adds database connection pool to all routes
         let app = app.data(pool.clone());

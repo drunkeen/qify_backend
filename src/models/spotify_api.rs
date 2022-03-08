@@ -162,3 +162,19 @@ pub struct SpotifySearch {
     // pub artist: SpotifySearchResult<SpotifyArtist>,
     pub tracks: SpotifySearchResult<SpotifyTrack>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RefreshAccountData {
+    pub grant_type: &'static str,
+    pub refresh_token: String,
+    pub client_id: String,
+    pub client_secret: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RefreshAccountResult {
+    pub access_token: String,
+    pub token_type: String,
+    pub expires_in: i64,
+    pub scope: String,
+}

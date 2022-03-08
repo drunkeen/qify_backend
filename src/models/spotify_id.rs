@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::models::ServiceResult;
 use crate::schema;
 use crate::schema::spotify;
+use crate::spotify_api::api_spotify_refresh;
 use crate::utils::format_error;
 
 #[allow(dead_code)]
@@ -30,7 +31,6 @@ pub struct NewSpotifyUser {
     pub expire_date: std::time::SystemTime,
 }
 
-#[cfg(debug_assertions)]
 pub fn get_all_accounts(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<SpotifyUser>> {
@@ -84,4 +84,26 @@ pub fn create_spotify_id(
     }
 
     Ok(results.unwrap())
+}
+
+pub async fn refresh_all_accounts(
+    pool: &Pool<ConnectionManager<PgConnection>>,
+) -> ServiceResult<Vec<SpotifyUser>> {
+    let connection = pool.get().expect("Could not create connection");
+    let mut accounts = schema::spotify::table.load::<SpotifyUser>(&connection)?;
+
+    // let mut accounts = accounts
+    //     .into_iter()
+    //     .map(|mut acc| (acc, api_spotify_refresh(acc.refresh_token.clone())))
+    //     .collect::<Vec<_>>();
+
+    for acc in &mut accounts {
+        let new_tokens = api_spotify_refresh(acc.refresh_token.clone()).await;
+        if let Ok(new_tokens) = new_tokens {
+            acc.access_token = new_tokens.access_token;
+            println!("Fix one");
+        }
+    }
+
+    Ok(accounts)
 }

@@ -1,7 +1,9 @@
 use actix_web::client::Client;
 use std::env;
 
-use crate::models::spotify_api::{Authenticate, SpotifyMe, SpotifySearch, SpotifyTokens};
+use crate::models::spotify_api::{
+    Authenticate, RefreshAccountData, RefreshAccountResult, SpotifyMe, SpotifySearch, SpotifyTokens,
+};
 
 const REDIRECT_URL: &str = "http://127.0.0.1:8080/callback.html";
 const ENDPOINT_AUTH_TOKEN: &str = "https://accounts.spotify.com/api/token";
@@ -80,6 +82,32 @@ pub async fn api_spotify_search(
     let result: &str = std::str::from_utf8(&*result)?;
 
     let result = serde_json::from_str::<SpotifySearch>(result)?;
+
+    Ok(result)
+}
+
+pub async fn api_spotify_refresh(refresh_token: String) -> SpotifyResult<RefreshAccountResult> {
+    let client = Client::default();
+
+    // Create request builder and send request
+    let data = RefreshAccountData {
+        refresh_token,
+        grant_type: "refresh_token",
+        client_id: env::var("CLIENT_ID").expect("CLIENT_ID must be set"),
+        client_secret: env::var("CLIENT_SECRET").expect("CLIENT_SECRET must be set"),
+    };
+
+    let data = serde_urlencoded::ser::to_string(data)?;
+
+    let mut response = client
+        .post(ENDPOINT_AUTH_TOKEN)
+        .content_type("application/x-www-form-urlencoded")
+        .send_body(&data) // <- Send request
+        .await?; // <- Wait for response
+
+    let result = response.body().await?;
+    let result: &str = std::str::from_utf8(&*result)?;
+    let result = serde_json::from_str::<RefreshAccountResult>(result)?;
 
     Ok(result)
 }
