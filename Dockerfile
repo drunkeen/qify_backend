@@ -11,7 +11,6 @@ RUN mkdir src
 RUN echo 'fn main(){}' > src/main.rs
 
 RUN cargo build --release
-RUN cargo build
 
 # Diesel config
 COPY migrations migrations
