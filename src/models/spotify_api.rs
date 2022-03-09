@@ -148,7 +148,6 @@ pub struct SpotifyTrackFiltered {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SpotifySearchResult<T> {
-    pub href: String,
     pub limit: u16,
     pub offset: u16,
     pub total: u16,

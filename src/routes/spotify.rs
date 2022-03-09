@@ -174,7 +174,6 @@ pub async fn search(
         } else {
             None
         },
-        href: tracks.href,
         limit: tracks.limit,
         previous: None,
         total: tracks.total,
