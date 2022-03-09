@@ -8,6 +8,7 @@ mod websocket;
 #[macro_use]
 extern crate diesel;
 
+use actix_cors::Cors;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -61,7 +62,16 @@ async fn main() -> std::io::Result<()> {
         .collect::<HashMap<_, _>>();
 
     HttpServer::new(move || {
-        let app = App::new();
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:19006")
+            .allowed_origin("http://127.0.0.1:19006")
+            .allowed_origin("http://127.0.0.1:8080")
+            .allowed_origin("http://192.168.1.138:19006")
+            .allowed_origin("http://192.168.1.138:8080")
+            .allowed_methods(vec!["GET", "POST", "OPTIONS", "DELETE"])
+            .allowed_header("Content-Type");
+
+        let app = App::new().wrap(cors);
         // let app = app.wrap(middleware::Logger::default());
         #[cfg(debug_assertions)]
         let app = app.wrap_fn(|req, srv| {
