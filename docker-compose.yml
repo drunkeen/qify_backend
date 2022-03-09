@@ -3,15 +3,13 @@ services:
   api:
     build: .
     ports:
-      - "8080:8080"
+      - "10000:8080"
     env_file:
       - .env
     depends_on:
       - db
     links:
       - db
-    expose:
-      - "8080"
 
   db:
     image: postgres:14
