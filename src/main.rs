@@ -66,8 +66,7 @@ async fn main() -> std::io::Result<()> {
             .allowed_origin("http://localhost:19006")
             .allowed_origin("http://127.0.0.1:19006")
             .allowed_origin("http://127.0.0.1:8080")
-            .allowed_origin("http://192.168.1.138:19006")
-            .allowed_origin("http://192.168.1.138:8080")
+            .allowed_origin(&std::env::var("EXPOSE_URL").expect("EXPOSE_URL needs to be set"))
             .allowed_methods(vec!["GET", "POST", "OPTIONS", "DELETE"])
             .allowed_header("Content-Type");
 
