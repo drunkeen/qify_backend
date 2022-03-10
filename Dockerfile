@@ -24,7 +24,7 @@ RUN rm -rf src
 COPY src src
 
 # Start script
-RUN echo 'diesel migration run && cargo r --release' > start.sh
+RUN echo 'sleep 10 && diesel migration run && cargo r --release' > start.sh
 RUN chmod 744 start.sh
 
 CMD ["bash", "./start.sh"]
