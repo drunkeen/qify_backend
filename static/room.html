@@ -68,7 +68,7 @@
     }
 
     async function getSongs() {
-        return await fetch(`http://127.0.0.1:8080/songs/${id}`)
+        return await fetch(`${window.location.protocol}//${window.location.host}/songs/${id}`)
             .then(async data => {
                 data = await data.json();
                 if (!data.success) {
@@ -90,7 +90,7 @@
         // let songs = await getSongs();
         // console.log(songs);
 
-        const data = await (await fetch(`http://127.0.0.1:8080/search/${id}?q=${searchDOM.value}&offset=0`)).json();
+        const data = await (await fetch(`${window.location.protocol}//${window.location.host}/search/${id}?q=${searchDOM.value}&offset=0`)).json();
         if (!data.success)
             return;
 

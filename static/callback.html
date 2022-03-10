@@ -33,8 +33,10 @@
         return response.json(); // parses JSON response into native JavaScript objects
     }
 
+    console.log()
+
     console.log({ code });
-    let room = postData('http://127.0.0.1:8080/spotifyAuthenticate', { code })
+    let room = postData(`${window.location.protocol}//${window.location.host}/spotifyAuthenticate`, { code })
         .then(data => {
             console.log(data);
             result.innerHTML = JSON.stringify(data);

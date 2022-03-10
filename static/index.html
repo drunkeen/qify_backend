@@ -1,10 +1,9 @@
 <body>
-  <a href="https://accounts.spotify.com/authorize?
-client_id=51a53fa310ec4fd99951b1c964a91a10
-&redirect_uri=http://127.0.0.1:8080/callback.html
-&scope=user-read-playback-state%20user-modify-playback-state%20user-read-currently-playing%20streaming%20playlist-modify-public%20user-read-email%20user-read-private
-&response_type=code
-&show_dialog=false">
+  <a href="#" id="code-test">
   TEST
   </a>
 </body>
+<script>
+  document.querySelector("#code-test").setAttribute('href',
+  `https://accounts.spotify.com/authorize?client_id=51a53fa310ec4fd99951b1c964a91a10&redirect_uri=${window.location.protocol}//${window.location.host}/callback.html&scope=user-read-playback-state%20user-modify-playback-state%20user-read-currently-playing%20streaming%20playlist-modify-public%20user-read-email%20user-read-private&response_type=code&show_dialog=false`)
+</script>

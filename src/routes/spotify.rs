@@ -145,7 +145,7 @@ pub async fn search(
         return send_error(error, 500, "Search: Could not fetch data from Spotify");
     }
 
-    let url = env::var("BACKEND_URL").unwrap_or_else(|_| String::from("http://127.0.0.1:8080"));
+    let url = env::var("BACKEND_URL").unwrap_or_else(|_| String::from("http://0.0.0.0:8080"));
 
     let tracks = search_results.unwrap().tracks;
     let filtered_items = tracks
