@@ -85,7 +85,7 @@ pub async fn spotify_authenticate(
     };
 
     let mut latest_inserts = latest_inserts.lock().unwrap();
-    latest_inserts.insert(res.room_id.clone(), DEFAULT_ROOM);
+    (*latest_inserts).insert(res.room_id.clone(), DEFAULT_ROOM);
 
     let spotify_id = create_spotify_id(&pool, &new_spotify_user);
     if let Err(error) = spotify_id {
