@@ -1,9 +1,17 @@
 <body>
-  <a href="#" id="code-test">
-  TEST
+  <a href="#" id="code-test-auto">
+    AUTO LOGIN
   </a>
+  <br/>
+  <br/>
+  <a href="#" id="code-test">
+    MANUAL LOGIN
+  </a>
+
 </body>
 <script>
-  document.querySelector("#code-test").setAttribute('href',
-  `https://accounts.spotify.com/authorize?client_id=51a53fa310ec4fd99951b1c964a91a10&redirect_uri=${window.location.protocol}//${window.location.host}/callback.html&scope=user-read-playback-state%20user-modify-playback-state%20user-read-currently-playing%20streaming%20playlist-modify-public%20user-read-email%20user-read-private&response_type=code&show_dialog=false`)
+    document.querySelector("#code-test-auto").setAttribute('href',
+            `https://accounts.spotify.com/authorize?client_id=51a53fa310ec4fd99951b1c964a91a10&redirect_uri=${window.location.protocol}//${window.location.host}/callback.html&scope=user-read-playback-state%20user-modify-playback-state%20user-read-currently-playing%20streaming%20playlist-modify-public%20user-read-email%20user-read-private&response_type=code&show_dialog=false`)
+    document.querySelector("#code-test").setAttribute('href',
+            `https://accounts.spotify.com/authorize?client_id=51a53fa310ec4fd99951b1c964a91a10&redirect_uri=${window.location.protocol}//${window.location.host}/callback.html&scope=user-read-playback-state%20user-modify-playback-state%20user-read-currently-playing%20streaming%20playlist-modify-public%20user-read-email%20user-read-private&response_type=code&show_dialog=true`)
 </script>
