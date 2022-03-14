@@ -23,6 +23,7 @@ pub struct Room {
     pub spotify_id: String,
     pub room_id_short: String,
     pub creation_date: std::time::SystemTime,
+    pub latest_track: String,
 }
 
 pub fn get_all_rooms(
@@ -75,12 +76,13 @@ pub fn create_room(
         let room_id_short = &room_id[0..6];
 
         let results = diesel::insert_into(room::dsl::room)
-            .values(vec![Room {
+            .values(&Room {
                 spotify_id: spotify_user.spotify_id.clone(),
                 room_id: room_id.clone(),
                 room_id_short: String::from(room_id_short),
                 creation_date: std::time::SystemTime::now(),
-            }])
+                latest_track: String::new(),
+            })
             .get_results::<Room>(&connection);
 
         // A room with `room_id_short` already exists
@@ -92,6 +94,36 @@ pub fn create_room(
         let result = results.unwrap().into_iter().next().unwrap();
         return Ok(result);
     }
+}
+
+pub fn set_latest_track(
+    pool: &Data<Pool<ConnectionManager<PgConnection>>>,
+    room_id: String,
+    latest_track: String,
+) -> ServiceResult<Room> {
+    use crate::schema::room::dsl;
+
+    let connection = pool.get().expect("Could not create connection");
+    let mut res = diesel::update(dsl::room.filter(dsl::room_id.eq(room_id)))
+        .set(dsl::latest_track.eq(latest_track))
+        .get_results::<Room>(&connection)?;
+
+    Ok(res.pop().unwrap())
+}
+
+pub fn get_latest_track(
+    pool: &Data<Pool<ConnectionManager<PgConnection>>>,
+    room_id: String,
+) -> ServiceResult<String> {
+    use crate::schema::room::dsl;
+
+    let connection = pool.get().expect("Could not create connection");
+    let res = room::table
+        .select(dsl::latest_track)
+        .filter(dsl::room_id.eq(room_id))
+        .first::<String>(&connection)?;
+
+    Ok(res)
 }
 
 fn print_rooms(rooms: Vec<Room>) {

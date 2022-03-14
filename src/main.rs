@@ -9,13 +9,11 @@ mod websocket;
 extern crate diesel;
 
 use actix_cors::Cors;
-use std::collections::HashMap;
-use std::sync::Mutex;
 use std::time::Duration;
 
 use actix_files as fs;
 // use actix_web::middleware;
-use crate::utils::{create_pool, RoomData, ROOM_ACTION_DEFAULT};
+use crate::utils::create_pool;
 #[cfg(debug_assertions)]
 use actix_web::dev::Service;
 use actix_web::web::Data;
@@ -55,12 +53,6 @@ async fn main() -> std::io::Result<()> {
     });
 
     // Key: RoomId / Value: song uri
-    let rooms = crate::models::room::get_all_rooms(&Data::new(pool.clone())).unwrap();
-    let latest_insert = rooms
-        .into_iter()
-        .map(|r| (r.room_id, ROOM_ACTION_DEFAULT))
-        .collect::<HashMap<_, _>>();
-
     HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("http://localhost:19006")
@@ -80,7 +72,6 @@ async fn main() -> std::io::Result<()> {
 
         // Adds database connection pool to all routes
         let app = app.data(pool.clone());
-        let app = app.data(Mutex::new(latest_insert.clone()));
 
         // Adds routes avail. only in debug
         #[cfg(debug_assertions)]

@@ -13,54 +13,6 @@ pub fn format_error(_error: Box<dyn std::error::Error>, error_message: &'static 
     error_message.to_string()
 }
 
-pub const ROOM_ACTION_DEFAULT: RoomData = RoomData {
-    action: RoomAction::Unknown,
-    uri: String::new(),
-    latest_change: std::time::SystemTime::UNIX_EPOCH,
-};
-
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub enum RoomAction {
-    RoomConnect,
-    RoomRefresh,
-    RoomData,
-
-    SongData,
-    SongAdd,
-    SongSearch,
-
-    Unknown,
-}
-
-#[derive(Debug, Clone)]
-pub struct RoomData {
-    pub latest_change: std::time::SystemTime,
-    pub uri: String,
-    pub action: RoomAction,
-}
-
-impl RoomData {
-    #[allow(dead_code)]
-    pub fn new(uri: String, action: RoomAction) -> RoomData {
-        RoomData {
-            uri,
-            action,
-            latest_change: std::time::SystemTime::now(),
-        }
-    }
-
-    pub fn update(&mut self, uri: Option<String>, action: Option<RoomAction>) {
-        if let Some(uri) = uri {
-            self.uri = uri;
-        }
-        if let Some(action) = action {
-            self.action = action;
-        }
-        self.latest_change = std::time::SystemTime::now();
-    }
-}
-
 pub fn create_pool() -> Pool<ConnectionManager<PgConnection>> {
     // let connection = establish_connection();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");

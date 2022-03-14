@@ -1,9 +1,19 @@
 table! {
+    actions (id) {
+        id -> Int4,
+        room_id -> Varchar,
+        action -> Varchar,
+        timestamp -> Timestamp,
+    }
+}
+
+table! {
     room (room_id) {
         room_id -> Varchar,
         spotify_id -> Varchar,
         room_id_short -> Varchar,
         creation_date -> Timestamp,
+        latest_track -> Varchar,
     }
 }
 
@@ -29,7 +39,11 @@ table! {
     }
 }
 
+joinable!(actions -> room (room_id));
+joinable!(song -> room (room_id));
+
 allow_tables_to_appear_in_same_query!(
+    actions,
     room,
     song,
     spotify,

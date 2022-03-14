@@ -1,3 +1,4 @@
+pub mod action;
 pub mod room;
 pub mod song;
 pub mod spotify_api;
