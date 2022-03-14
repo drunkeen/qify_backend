@@ -15,8 +15,7 @@ use actix_files as fs;
 // use actix_web::middleware;
 use crate::utils::create_pool;
 #[cfg(debug_assertions)]
-use actix_web::dev::Service;
-use actix_web::web::Data;
+use actix_web::{dev::Service, web::Data};
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 #[cfg(debug_assertions)]

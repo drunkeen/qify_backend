@@ -26,6 +26,7 @@ pub struct Room {
     pub latest_track: String,
 }
 
+#[cfg(debug_assertions)]
 pub fn get_all_rooms(
     pool: &Data<Pool<ConnectionManager<PgConnection>>>,
 ) -> ServiceResult<Vec<Room>> {
