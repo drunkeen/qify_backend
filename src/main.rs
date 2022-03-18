@@ -27,7 +27,19 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
     dotenv().ok();
 
-    let pool = create_pool();
+    println!("Waiting for pool");
+    let mut pool = create_pool();
+    while pool.is_err() {
+        println!(
+            "{:?}: No pool, trying again...",
+            std::time::SystemTime::now()
+        );
+        pool = create_pool();
+    }
+    println!("Pool is up");
+
+    let pool = pool.unwrap();
+
     let pool_clone = pool.clone();
 
     #[cfg(debug_assertions)]
