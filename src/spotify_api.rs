@@ -14,8 +14,7 @@ type SpotifyResult<T> = Result<T, Box<dyn std::error::Error>>;
 pub async fn api_spotify_authenticate(code: String) -> SpotifyResult<SpotifyTokens> {
     let client = Client::default();
 
-    let redirect_uri = env::var("EXPOSE_URL").expect("EXPOSE_URL must be set");
-    let redirect_uri = format!("{}/callback.html", redirect_uri);
+    let redirect_uri = env::var("REDIRECT_URI").expect("REDIRECT_URI must be set");
 
     // Create request builder and send request
     let data = Authenticate {
