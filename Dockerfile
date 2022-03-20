@@ -14,7 +14,6 @@ RUN cargo build --release
 
 # Diesel config
 COPY migrations migrations
-COPY .env .env
 
 # Static serving
 COPY static static
