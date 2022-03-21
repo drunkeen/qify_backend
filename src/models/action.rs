@@ -19,7 +19,7 @@ pub struct RoomAction {
 }
 
 #[allow(dead_code)]
-#[derive(Insertable, Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Insertable, Serialize, Deserialize, Debug, Eq, PartialEq, Hash, AsChangeset)]
 #[table_name = "actions"]
 pub struct NewRoomAction {
     pub room_id: String,
@@ -63,13 +63,18 @@ pub fn push_actions(
 ) -> ServiceResult<Vec<RoomAction>> {
     use crate::schema::actions::dsl;
 
+    let val = NewRoomAction {
+        action,
+        timestamp: std::time::SystemTime::now(),
+        room_id: room_id_full,
+    };
+
     let connection = pool.get().expect("Could not create connection");
     let res = diesel::insert_into(dsl::actions)
-        .values(&NewRoomAction {
-            action,
-            timestamp: std::time::SystemTime::now(),
-            room_id: room_id_full,
-        })
+        .values(&val)
+        .on_conflict(dsl::room_id)
+        .do_update()
+        .set(&val)
         .get_results::<RoomAction>(&connection)?;
 
     Ok(res)
