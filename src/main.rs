@@ -17,7 +17,6 @@ use crate::utils::create_pool;
 #[cfg(debug_assertions)]
 use actix_web::{dev::Service, web::Data};
 use actix_web::{web, App, HttpServer};
-use dotenv::dotenv;
 #[cfg(debug_assertions)]
 use futures::FutureExt;
 
@@ -25,7 +24,6 @@ use futures::FutureExt;
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
-    dotenv().ok();
 
     println!("Waiting for pool");
     let mut pool = create_pool();
