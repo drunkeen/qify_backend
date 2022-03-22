@@ -3,7 +3,7 @@
 CREATE TABLE "actions" (
     "id" SERIAL PRIMARY KEY,
 
-    "room_id" VARCHAR(64) NOT NULL,
+    "room_id" VARCHAR(64) NOT NULL UNIQUE,
 
     "action" VARCHAR(16) NOT NULL,
     "timestamp" TIMESTAMP NOT NULL,
