@@ -143,7 +143,14 @@ pub async fn search(
         .items
         .into_iter()
         .map(|t| SpotifyTrackFiltered {
-            image: t.album.images.into_iter().map(|i| i.url).next(),
+            image: t
+                .album
+                .images
+                .into_iter()
+                .map(|i| (Some(i.url), i.height.unwrap_or(0)))
+                .min_by(|a, b| a.1.cmp(&b.1))
+                .unwrap_or((Some(String::new()), 0))
+                .0,
             uri: t.uri,
             album: t.album.name,
             title: t.name,
